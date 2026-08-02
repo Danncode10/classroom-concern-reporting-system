@@ -4,25 +4,51 @@ import { createClient } from '@/utils/supabase/server';
 import { verifyRateLimit } from '@/lib/ratelimit';
 
 export async function signInWithEmailRateLimited(email: string, password: string) {
-  const { success } = await verifyRateLimit(email, "sign-in");
-  if (!success) throw new Error('Too many login attempts. Try again in a few moments.');
+  try {
+    const { success } = await verifyRateLimit(email, "sign-in");
+    if (!success) {
+      return {
+        success: false,
+        requiresMFA: false,
+        error: "Too many login attempts. Try again in a few moments.",
+      };
+    }
 
-  const supabase = await createClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const supabase = await createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (signInError) throw signInError;
+    if (signInError) {
+      return {
+        success: false,
+        requiresMFA: false,
+        error: signInError.message || "Invalid school ID or password.",
+      };
+    }
 
-  const { data: mfaData, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (mfaError) throw mfaError;
+    const { data: mfaData, error: mfaError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (mfaError) {
+      return {
+        success: false,
+        requiresMFA: false,
+        error: mfaError.message || "Could not verify the login session.",
+      };
+    }
 
-  if (mfaData.nextLevel === 'aal2' && mfaData.nextLevel !== mfaData.currentLevel) {
-    return { success: true, requiresMFA: true };
+    if (mfaData.nextLevel === 'aal2' && mfaData.nextLevel !== mfaData.currentLevel) {
+      return { success: true, requiresMFA: true, error: null };
+    }
+
+    return { success: true, requiresMFA: false, error: null };
+  } catch {
+    return {
+      success: false,
+      requiresMFA: false,
+      error: "Login failed. Please check the deployment settings and try again.",
+    };
   }
-
-  return { success: true, requiresMFA: false };
 }
 
 export async function signUpWithEmailRateLimited(

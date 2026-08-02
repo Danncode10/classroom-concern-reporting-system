@@ -1,87 +1,85 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Check, X, Eye, EyeOff, Pencil } from "lucide-react";
-import { listServices, updateService } from "@/services/services";
-import type { Tables } from "@/types/supabase";
+import { Camera, ImagePlus, Loader2, RotateCcw, Send, CheckCircle2, X } from "lucide-react";
+import {
+  createConcernReport,
+} from "@/services/concerns";
+import { CONCERN_CATEGORIES, CONCERN_LIMITS, type ConcernCategory, type ConcernReportInput } from "@/lib/concerns";
+import { deleteConcernImage, uploadConcernImage, validateConcernImage } from "@/lib/concern-image-upload";
 
-type Service = Tables<"services">;
+type ReportForm = Omit<ConcernReportInput, "image_url" | "image_path">;
 
-function EditableCell({
-  value, onSave, type = "text", prefix,
-}: {
-  value: string | number | null;
-  onSave: (val: string) => Promise<void>;
-  type?: "text" | "number";
-  prefix?: string;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value?.toString() ?? "");
-  const [saving, setSaving] = useState(false);
-
-  if (!editing) {
-    return (
-      <button
-        onClick={() => { setDraft(value?.toString() ?? ""); setEditing(true); }}
-        className="group inline-flex items-center gap-1.5 hover:text-primary transition-colors text-left"
-      >
-        <span>{prefix}{value ?? "—"}</span>
-        <Pencil className="w-3 h-3 opacity-0 group-hover:opacity-50" />
-      </button>
-    );
-  }
-
-  return (
-    <div className="inline-flex items-center gap-1">
-      <input
-        autoFocus
-        type={type}
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Escape") setEditing(false); }}
-        className="bg-background border border-border rounded px-2 py-1 text-[13px] w-24 focus:outline-none focus:ring-1 focus:ring-primary"
-        disabled={saving}
-      />
-      <button
-        onClick={async () => {
-          setSaving(true);
-          try { await onSave(draft); setEditing(false); }
-          catch (e) { toast.error(e instanceof Error ? e.message : "Save failed"); }
-          finally { setSaving(false); }
-        }}
-        className="p-1 text-emerald-500 hover:bg-muted rounded"
-      >
-        {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-      </button>
-      <button onClick={() => setEditing(false)} className="p-1 text-muted-foreground hover:bg-muted rounded">
-        <X className="w-3 h-3" />
-      </button>
-    </div>
-  );
-}
+const initialForm: ReportForm = {
+  title: "",
+  description: "",
+  location: "",
+  category: "other",
+};
 
 export function ServicesTab() {
+  const [form, setForm] = useState<ReportForm>(initialForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
-  const { data: services, isLoading } = useQuery({
-    queryKey: ["services"],
-    queryFn: listServices,
-  });
 
   const mutation = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Service> }) => updateService(id, updates),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["services"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      qc.invalidateQueries({ queryKey: ["recent-activity"] });
+    mutationFn: async () => {
+      let uploadedImage: { url: string; path: string } | null = null;
+      try {
+        if (imageFile) uploadedImage = await uploadConcernImage(imageFile);
+        return await createConcernReport({
+          ...form,
+          image_url: uploadedImage?.url ?? null,
+          image_path: uploadedImage?.path ?? null,
+        });
+      } catch (error) {
+        if (uploadedImage) await deleteConcernImage(uploadedImage.path);
+        throw error;
+      }
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Update failed"),
+    onSuccess: () => {
+      setForm(initialForm);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImageFile(null);
+      setImagePreview(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
+      qc.invalidateQueries({ queryKey: ["community-concerns"] });
+      toast.success("Report submitted");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Report failed"),
   });
 
-  const save = async (id: string, updates: Partial<Service>) => {
-    await mutation.mutateAsync({ id, updates });
-    toast.success("Saved");
+  const updateForm = (updates: Partial<ReportForm>) => {
+    setForm((current) => ({ ...current, ...updates }));
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const openImagePicker = () => {
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    imageInputRef.current?.click();
+  };
+
+  const selectImage = (file: File | undefined) => {
+    if (!file) return;
+    const validationError = validateConcernImage(file);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   return (
@@ -89,73 +87,154 @@ export function ServicesTab() {
       <div>
         <h2 className="text-2xl font-semibold text-foreground tracking-tight">Create Report</h2>
         <p className="mt-1 text-[14px] text-muted-foreground">
-          Submit classroom issues so they can be reviewed and assigned a status.
+          Submit classroom concerns so admins can review and act on them.
         </p>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
-        ) : (services ?? []).length === 0 ? (
-          <div className="p-12 text-center text-[13px] text-muted-foreground">Report form will appear here.</div>
-        ) : (
-          <table className="w-full text-[13px]">
-            <thead className="bg-muted/50 border-b border-border">
-              <tr className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="px-5 py-3">Report Type</th>
-                <th className="px-3 py-3">Priority From</th>
-                <th className="px-3 py-3">Priority To</th>
-                <th className="px-3 py-3">Target</th>
-                <th className="px-3 py-3">Visible</th>
-                <th className="px-3 py-3">Pinned</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {(services ?? []).map((s) => (
-                <tr key={s.id} className="hover:bg-muted/30">
-                  <td className="px-5 py-3">
-                    <EditableCell value={s.name} onSave={(v) => save(s.id, { name: v })} />
-                    {s.short_desc && <p className="text-[11px] text-muted-foreground mt-0.5">{s.short_desc}</p>}
-                  </td>
-                  <td className="px-3 py-3">
-                    <EditableCell value={s.price_from} type="number" prefix="$" onSave={(v) => save(s.id, { price_from: v ? parseFloat(v) : null })} />
-                  </td>
-                  <td className="px-3 py-3">
-                    <EditableCell value={s.price_to} type="number" prefix="$" onSave={(v) => save(s.id, { price_to: v ? parseFloat(v) : null })} />
-                  </td>
-                  <td className="px-3 py-3">
-                    <EditableCell value={s.duration_minutes} type="number" onSave={(v) => save(s.id, { duration_minutes: v ? parseInt(v) : null })} />
-                    <span className="text-[10px] text-muted-foreground ml-1">min</span>
-                  </td>
-                  <td className="px-3 py-3">
-                    <button
-                      onClick={() => save(s.id, { is_published: !s.is_published })}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors ${
-                        s.is_published ? "bg-emerald-500/10 text-emerald-500" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {s.is_published ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                      {s.is_published ? "Live" : "Hidden"}
-                    </button>
-                  </td>
-                  <td className="px-3 py-3">
-                    <input
-                      type="checkbox"
-                      checked={!!s.is_featured}
-                      onChange={() => save(s.id, { is_featured: !s.is_featured })}
-                      className="accent-primary cursor-pointer"
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          mutation.mutate();
+        }}
+        className="bg-card border border-border rounded-2xl overflow-hidden"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_18rem] gap-0">
+          <div className="p-6 space-y-5">
+            <div className="space-y-2">
+              <label htmlFor="concern-title" className="text-[12px] font-semibold text-foreground">
+                Concern title
+              </label>
+              <input
+                id="concern-title"
+                value={form.title}
+                onChange={(event) => updateForm({ title: event.target.value })}
+                placeholder="Broken ceiling fan in Room 204"
+                maxLength={CONCERN_LIMITS.title}
+                className="w-full h-11 rounded-xl border border-input bg-background px-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+              <p className="text-right text-[11px] text-muted-foreground">{form.title.length}/{CONCERN_LIMITS.title}</p>
+            </div>
 
-      <p className="text-[11px] text-muted-foreground">
-        Next step: wire this tab to <code>concern_reports</code>.
-      </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="concern-image" className="text-[12px] font-semibold text-foreground">Photo <span className="font-normal text-muted-foreground">(optional)</span></label>
+                {imagePreview && (
+                  <button type="button" onClick={clearImage} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" /> Remove
+                  </button>
+                )}
+              </div>
+              {imagePreview ? (
+                <div className="space-y-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Browser previews use an in-memory object URL. */}
+                  <img src={imagePreview} alt="Selected concern" className="max-h-64 w-full rounded-xl border border-border object-cover" />
+                  <button
+                    type="button"
+                    onClick={openImagePicker}
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 text-[12px] font-semibold text-foreground hover:bg-muted sm:w-auto"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Retake photo
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={openImagePicker} className="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center hover:bg-muted/40">
+                  <ImagePlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground">
+                    <Camera className="h-4 w-4" />
+                    Take or add a photo
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">On mobile, your camera can open directly. JPEG, PNG, or WebP.</span>
+                </button>
+              )}
+              <input
+                ref={imageInputRef}
+                id="concern-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="sr-only"
+                onChange={(event) => selectImage(event.target.files?.[0])}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="concern-category" className="text-[12px] font-semibold text-foreground">
+                  Category
+                </label>
+                <select
+                  id="concern-category"
+                  value={form.category}
+                  onChange={(event) => updateForm({ category: event.target.value as ConcernCategory })}
+                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {CONCERN_CATEGORIES.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="concern-location" className="text-[12px] font-semibold text-foreground">
+                  Location
+                </label>
+                <input
+                  id="concern-location"
+                  value={form.location ?? ""}
+                  onChange={(event) => updateForm({ location: event.target.value })}
+                  placeholder="Building, room, or area"
+                  maxLength={CONCERN_LIMITS.location}
+                  className="w-full h-11 rounded-xl border border-input bg-background px-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
+                />
+                <p className="text-right text-[11px] text-muted-foreground">{form.location?.length ?? 0}/{CONCERN_LIMITS.location}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="concern-description" className="text-[12px] font-semibold text-foreground">
+                Description
+              </label>
+              <textarea
+                id="concern-description"
+                value={form.description}
+                onChange={(event) => updateForm({ description: event.target.value })}
+                placeholder="Describe what happened, where it is, and why it needs attention."
+                rows={7}
+                maxLength={CONCERN_LIMITS.description}
+                className="w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
+                required
+              />
+              <p className="text-right text-[11px] text-muted-foreground">{form.description.length}/{CONCERN_LIMITS.description}</p>
+            </div>
+          </div>
+
+          <aside className="border-t lg:border-l lg:border-t-0 border-border bg-muted/30 p-6">
+            <div className="space-y-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <CheckCircle2 className="h-5 w-5 text-primary" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-[14px] font-semibold text-foreground">Before submitting</h3>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  Keep the report clear, specific, and classroom-related.
+                </p>
+              </div>
+              <button
+                type="submit"
+                disabled={mutation.isPending}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
+                {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Submit Report
+              </button>
+            </div>
+          </aside>
+        </div>
+      </form>
     </div>
   );
 }

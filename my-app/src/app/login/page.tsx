@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signInWithEmailRateLimited } from '@/services/auth-server';
+import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -43,17 +43,22 @@ export default function AuthPage() {
         throw new Error('Enter your school ID using the format XXX-XXXX.');
       }
 
-      const result = await signInWithEmailRateLimited(schoolIdToAuthEmail(normalizedSchoolId), password);
-      if (result.requiresMFA) {
-        router.push('/auth/mfa');
-      } else {
-        setSuccess(true);
-        setTimeout(() => {
-          toast.success('Login successful!');
-          router.push('/dashboard');
-          router.refresh();
-        }, 800);
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: schoolIdToAuthEmail(normalizedSchoolId),
+        password,
+      });
+
+      if (signInError) {
+        throw new Error(signInError.message || 'Invalid school ID or password.');
       }
+
+      setSuccess(true);
+      setTimeout(() => {
+        toast.success('Login successful!');
+        router.push('/dashboard');
+        router.refresh();
+      }, 800);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

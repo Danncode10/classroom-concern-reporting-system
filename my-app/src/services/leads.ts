@@ -42,7 +42,7 @@ export async function createLead(input: Omit<TablesInsert<"leads">, "organizatio
     type: "new_lead",
     title: "New lead",
     body: `${input.name} (${input.email})`,
-    link: "/dashboard?tab=leads",
+    link: "/dashboard?tab=track-report",
   });
 
   return data;

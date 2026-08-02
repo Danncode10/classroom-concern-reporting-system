@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Inbox, TrendingUp, MessageSquareText } from "lucide-react";
+import { FileText, Inbox, MessageSquareText, TrendingUp } from "lucide-react";
 import { getDashboardStats, getRecentActivity } from "@/services/dashboard-stats";
 import type { DashboardTabId } from "@/lib/dashboard-features";
 import { isFeatureEnabled, type FeatureFlag } from "@/lib/dashboard-features";
@@ -58,19 +58,21 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
   });
 
   const quickActions: Array<{ label: string; desc: string; tab: DashboardTabId; flag: FeatureFlag }> = [
-    { label: "Create report",     desc: "Submit a classroom concern", tab: "services" as const, flag: "pricing" as const },
-    { label: "Track report",      desc: "Check your submitted reports", tab: "leads" as const, flag: "contactForm" as const },
-    { label: "Community",         desc: "See visible student concerns", tab: "bookings" as const, flag: "contactForm" as const },
+    { label: "Track report",      desc: "Check your submitted reports", tab: "track-report" as const, flag: "contactForm" as const },
+    { label: "Home feed",         desc: "See visible student concerns", tab: "home" as const, flag: "always" as const },
     { label: "Account settings",  desc: "Profile and security",        tab: "settings" as const, flag: "always" as const },
   ].filter(a => isFeatureEnabled(a.flag));
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-foreground tracking-tight">
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="rounded-xl border border-border bg-card px-5 py-5">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">NVSU concerns</p>
+          <h2 className="mt-1 text-2xl font-semibold text-foreground tracking-tight">
           Good day, {displayName}.
-        </h2>
-        <p className="text-[13px] text-muted-foreground mt-1">{today}</p>
+          </h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">{today}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -80,7 +82,7 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
         <StatCard label="Community Posts"   value={stats?.totalBookings ?? "—"}     note="Visible concerns"           icon={MessageSquareText} accent="bg-rose-500/10" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <h3 className="text-[13px] font-semibold text-foreground">Recent Activity</h3>

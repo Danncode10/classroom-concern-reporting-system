@@ -1,11 +1,11 @@
 import businessConfig from "../../business.json";
 
 export type DashboardTabId =
-  | "overview"
-  | "services"
-  | "leads"
-  | "bookings"
-  | "blog"
+  | "home"
+  | "create-report"
+  | "track-report"
+  | "admin"
+  | "manage-users"
   | "analytics"
   | "settings";
 
@@ -26,12 +26,12 @@ interface TabConfig {
 }
 
 export const TAB_CONFIG: TabConfig[] = [
-  { id: "overview",   label: "Home",          feature: "always" },
-  { id: "services",   label: "Create Report", feature: "pricing" },
-  { id: "leads",      label: "Track Report",  feature: "contactForm" },
-  { id: "bookings",   label: "Community",     feature: "contactForm" },
-  { id: "blog",       label: "Admin",         feature: "blog" },
-  { id: "analytics",  label: "Analytics",  feature: "analytics" },
+  { id: "home",          label: "Home",          feature: "always" },
+  { id: "create-report", label: "Create Report", feature: "pricing" },
+  { id: "track-report",  label: "Track Report",  feature: "contactForm" },
+  { id: "admin",         label: "Review Reports", feature: "blog" },
+  { id: "manage-users",  label: "Manage Users",  feature: "blog" },
+  { id: "analytics",  label: "Analytics",  feature: "always" },
   { id: "settings",   label: "Settings",   feature: "always" },
 ];
 

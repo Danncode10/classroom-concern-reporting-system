@@ -2,8 +2,6 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-const APP_ID = process.env.NEXT_PUBLIC_APP_ID ?? "business-template";
-
 export async function getDashboardStats() {
   const supabase = await createClient();
   const today = new Date();
@@ -11,39 +9,46 @@ export async function getDashboardStats() {
   const todayIso = today.toISOString();
 
   const [
-    publishedServicesRes,
-    todayLeadsRes,
-    totalBookingsRes,
-    pendingBookingsRes,
-    newLeadsRes,
-    galleryPublishedRes,
+    openReportsRes,
+    todayReportsRes,
+    totalReportsRes,
+    inProgressReportsRes,
+    submittedReportsRes,
+    resolvedReportsRes,
   ] = await Promise.all([
-    supabase.from("services").select("*", { count: "exact", head: true }).eq("app_id", APP_ID).eq("is_published", true),
-    supabase.from("leads").select("*", { count: "exact", head: true }).eq("app_id", APP_ID).gte("created_at", todayIso),
-    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("app_id", APP_ID),
-    supabase.from("bookings").select("*", { count: "exact", head: true }).eq("app_id", APP_ID).eq("status", "pending"),
-    supabase.from("leads").select("*", { count: "exact", head: true }).eq("app_id", APP_ID).eq("status", "new"),
-    supabase.from("gallery_items").select("*", { count: "exact", head: true }).eq("app_id", APP_ID).eq("is_published", true),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).in("status", ["submitted", "in_review", "in_progress"]),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).gte("created_at", todayIso),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).eq("is_removed", false),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).eq("status", "in_progress"),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).eq("status", "submitted"),
+    supabase.from("concern_reports").select("*", { count: "exact", head: true }).eq("status", "resolved"),
   ]);
 
   return {
-    publishedServices: publishedServicesRes.count ?? 0,
-    todayLeads: todayLeadsRes.count ?? 0,
-    totalBookings: totalBookingsRes.count ?? 0,
-    pendingBookings: pendingBookingsRes.count ?? 0,
-    newLeads: newLeadsRes.count ?? 0,
-    galleryPublished: galleryPublishedRes.count ?? 0,
+    publishedServices: openReportsRes.count ?? 0,
+    todayLeads: todayReportsRes.count ?? 0,
+    totalBookings: totalReportsRes.count ?? 0,
+    pendingBookings: inProgressReportsRes.count ?? 0,
+    newLeads: submittedReportsRes.count ?? 0,
+    galleryPublished: resolvedReportsRes.count ?? 0,
   };
 }
 
 export async function getRecentActivity(limit = 10) {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("audit_logs")
-    .select("id, action, resource_type, resource_id, actor_email, diff, created_at")
-    .eq("app_id", APP_ID)
+    .from("concern_reports")
+    .select("id, title, status, author_id, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) return [];
-  return data ?? [];
+  return (data ?? []).map((report) => ({
+    id: report.id,
+    action: `Submitted report: ${report.title}`,
+    resource_type: "concern_report",
+    resource_id: report.id,
+    actor_email: null,
+    diff: { status: report.status },
+    created_at: report.created_at,
+  }));
 }

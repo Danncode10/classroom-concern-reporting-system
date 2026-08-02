@@ -24,6 +24,8 @@ export const concernReports = pgTable(
     description: text("description").notNull(),
     category: concernCategory("category").notNull().default("other"),
     location: text("location"),
+    imageUrl: text("image_url"),
+    imagePath: text("image_path"),
     status: concernStatus("status").notNull().default("submitted"),
     voteScore: integer("vote_score").notNull().default(0),
     isRemoved: boolean("is_removed").notNull().default(false),
