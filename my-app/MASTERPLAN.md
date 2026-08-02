@@ -23,11 +23,13 @@ The app already has authentication, landing pages, dashboard layout, sidebar nav
 
 ### Login Page
 
-- Change login from email-based login to ID-number based login.
-- Use ID number format like `XXX-XXXX`.
-- Keep password login.
-- Remove email verification and sign-up flow for normal users.
-- Users will be manually created in Supabase by an admin.
+- [x] Change login from email-based login to ID-number based login.
+- [x] Use ID number format like `XXX-XXXX`.
+- [x] Keep password login.
+- [x] Remove email verification and sign-up flow for normal users.
+- [x] Users will be manually created in Supabase by an admin.
+
+Note: Supabase Auth still requires an email or phone internally. For the MVP, create users in Supabase using the format `123-4567@nvsu.local`, but users will only type `123-4567` in the app. The login page converts the ID number into the internal Supabase email automatically.
 
 ### Dashboard Sidebar
 
