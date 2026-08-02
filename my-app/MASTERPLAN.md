@@ -1,67 +1,81 @@
-# MASTERPLAN — NVSU Classroom Concern Reporting System MVP
+# MASTERPLAN
+
+# NVSU Classroom Concern Reporting System MVP
 
 > **Status:** MVP planning  
-> **Source plan:** `../PLAN.md`  
-> **App folder:** `my-app`
+> **App folder:** `my-app`  
+> **Approach:** Tweak the existing Dannflow app instead of rebuilding the UI structure.
 
 ## MVP Goal
 
-Build a simple campus concern feed where students and professors can post classroom concerns, upvote concerns for visibility, and admins can manage posts, users, and concern status.
+Turn the existing Dannflow app into a classroom concern reporting system with the smallest practical set of changes.
 
-## Phase 0: Setup and Cleanup
+The app already has authentication, landing pages, dashboard layout, sidebar navigation, and Supabase support. The MVP should reuse those parts and only change what is needed for the classroom concern workflow.
 
-- [ ] [P0.1] Confirm app name, colors, and simple navigation.
-- [ ] [P0.2] Replace Dannflow placeholder copy with classroom concern system copy.
-- [ ] [P0.3] Remove or hide non-MVP template sections like pricing, blog, bookings, and leads.
+## Phase 1: MVP Tweaks
 
-## Phase 1: User Concern Feed
+### Landing Page
 
-- [ ] [P1.1] Build the main concern feed as the first useful screen.
-- [ ] [P1.2] Create concern cards with title, location, type, status, photo, date, and upvote count.
-- [ ] [P1.3] Add search and filters for status, concern type, and location.
-- [ ] [P1.4] Add a simple upvote interaction for normal users.
+- Replace the generic Dannflow landing page copy with NVSU classroom concern reporting content.
+- Keep the existing layout structure where possible.
+- Make the first screen clearly explain that users can post, track, and support classroom concerns.
+- Remove or hide non-MVP sections such as pricing, marketing blog previews, leads, bookings, and generic SaaS content.
 
-## Phase 2: Post Concern Flow
+### Login Page
 
-- [ ] [P2.1] Build the post concern form.
-- [ ] [P2.2] Include fields for title, location, concern type, description, course/section, and photo.
-- [ ] [P2.3] Add clear validation and friendly error messages.
-- [ ] [P2.4] Show a confirmation screen after posting.
+- Change login from email-based login to ID-number based login.
+- Use ID number format like `XXX-XXXX`.
+- Keep password login.
+- Remove email verification and sign-up flow for normal users.
+- Users will be manually created in Supabase by an admin.
 
-## Phase 3: User Dashboard
+### Dashboard Sidebar
 
-- [ ] [P3.1] Show concerns posted by the current user.
-- [ ] [P3.2] Show concerns upvoted by the current user.
-- [ ] [P3.3] Show recently updated and most upvoted concerns.
+- Reuse the existing dashboard shell and sidebar.
+- Rename the tabs for the classroom concern system.
+- Suggested tabs: Home, Create Report, Track Report, Community, Admin.
+- Show the Admin tab only for admin users.
 
-## Phase 4: Admin Dashboard
+### User Features
 
-- [ ] [P4.1] Build an admin concern management table.
-- [ ] [P4.2] Allow admins to change concern status.
-- [ ] [P4.3] Allow admins to remove invalid or inappropriate posts.
-- [ ] [P4.4] Allow admins to block users who misuse the system.
-- [ ] [P4.5] Add admin remarks or action-taken notes.
+- Users can create a classroom concern report.
+- Users can track their own reports.
+- Users can view community reports.
+- Users can upvote or downvote community reports so visible concerns are easier to notice.
+- Students and professors use the same normal user role.
 
-## Phase 5: Database and Auth
+### Admin Features
 
-- [ ] [P5.1] Create database tables for concerns, upvotes, profiles, status history, and moderation logs.
-- [ ] [P5.2] Add Supabase policies for normal users and admins.
-- [ ] [P5.3] Connect concern posting, feed loading, upvotes, and admin actions to Supabase.
+- Admins can view all reports.
+- Admins can change report status.
+- Admins can remove inappropriate or duplicate posts.
+- Admins can block users.
+- Admins can manage concerns without changing the existing dashboard structure too much.
 
-## Phase 6: MVP Testing
+### Supabase
 
-- [ ] [P6.1] Test the student/professor flow on mobile.
-- [ ] [P6.2] Test the admin flow on desktop.
-- [ ] [P6.3] Check readability, spacing, empty states, and form errors.
-- [ ] [P6.4] Fix the highest-impact usability issues.
+- Use the existing Supabase project for the app.
+- Update `.env.local` with the correct Supabase project ID and database connection host.
+- Add only the schema needed for the MVP.
+- Create tables for profiles, reports, votes, status history, and moderation actions.
+- Use role-based access so normal users and admins have different permissions.
 
-## MVP Acceptance Criteria
+### MVP Acceptance Criteria
 
-- [ ] Users can post a classroom concern.
-- [ ] Users can view a feed of concerns.
-- [ ] Users can upvote concerns.
-- [ ] Users can view their own posts and upvoted concerns.
-- [ ] Admins can update concern status.
-- [ ] Admins can remove posts.
-- [ ] Admins can block users.
-- [ ] The interface is simple, readable, and usable on mobile.
+- The landing page no longer looks like a generic SaaS template.
+- Users can log in using an ID number and password.
+- The dashboard sidebar matches the classroom concern workflow.
+- Users can create and track reports.
+- Users can vote on community reports.
+- Admins can manage report status, remove posts, and block users.
+- The existing Dannflow layout is reused as much as possible.
+- The MVP is simple, clear, and usable for students and professors.
+
+## Later Improvements
+
+- Comments on community reports.
+- Merge duplicate reports.
+- Notifications.
+- QR code per classroom.
+- Analytics for repeated classroom issues.
+- Anonymous reports.
