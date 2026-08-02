@@ -1,7 +1,9 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   date,
   integer,
+  index,
   pgTable,
   text,
   timestamp,
@@ -27,19 +29,33 @@ export const organizations = pgTable(
   }),
 );
 
-export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey(),
-  appId: text("app_id").notNull().default("business-template"),
-  organizationId: uuid("organization_id").references(() => organizations.id, {
-    onDelete: "set null",
+export const profiles = pgTable(
+  "profiles",
+  {
+    id: uuid("id").primaryKey(),
+    appId: text("app_id").notNull().default("business-template"),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
+    email: text("email"),
+    schoolId: text("school_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(sql`timezone('utc'::text, now())`),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`timezone('utc'::text, now())`),
+    role: userRole("role").default("user"),
+    fullName: text("full_name"),
+    age: integer("age"),
+    birthday: date("birthday"),
+    gender: text("gender"),
+    isBlocked: boolean("is_blocked").notNull().default(false),
+    blockedAt: timestamp("blocked_at", { withTimezone: true }),
+    blockedReason: text("blocked_reason"),
+  },
+  (table) => ({
+    schoolIdUnique: uniqueIndex("profiles_school_id_idx").on(table.schoolId),
+    roleIdx: index("profiles_role_idx").on(table.role),
   }),
-  email: text("email"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .default(sql`timezone('utc'::text, now())`),
-  role: userRole("role").default("user"),
-  fullName: text("full_name"),
-  age: integer("age"),
-  birthday: date("birthday"),
-  gender: text("gender"),
-});
+);
