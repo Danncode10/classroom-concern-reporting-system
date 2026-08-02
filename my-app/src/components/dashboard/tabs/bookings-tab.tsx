@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, MapPin, MessageSquareText, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ArrowRight, Loader2, MapPin, MessageSquareText, ThumbsDown, ThumbsUp } from "lucide-react";
 import {
   listCommunityConcerns,
   setConcernVote,
 } from "@/services/concerns";
 import { CONCERN_STATUS_LABELS, type CommunityConcern, type ConcernStatus } from "@/lib/concerns";
+import { createClient } from "@/utils/supabase/client";
 
 const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
   { value: "all", label: "All" },
@@ -35,6 +36,25 @@ function formatStatus(status: ConcernStatus) {
 
 function initials(name: string) {
   return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function applyVoteToConcern(concern: CommunityConcern, value: -1 | 1): CommunityConcern {
+  const previousVote = concern.userVote;
+  let upvoteCount = concern.upvoteCount;
+  let downvoteCount = concern.downvoteCount;
+
+  if (previousVote === value) {
+    if (value === 1) upvoteCount -= 1;
+    else downvoteCount -= 1;
+    return { ...concern, userVote: null, upvoteCount, downvoteCount };
+  }
+
+  if (previousVote === 1) upvoteCount -= 1;
+  if (previousVote === -1) downvoteCount -= 1;
+  if (value === 1) upvoteCount += 1;
+  else downvoteCount += 1;
+
+  return { ...concern, userVote: value, upvoteCount, downvoteCount };
 }
 
 function CommunityCard({
@@ -94,8 +114,8 @@ function CommunityCard({
         >
           <ThumbsUp className="h-4 w-4" />
           Upvote
+          <span className="font-semibold tabular-nums">{concern.upvoteCount}</span>
         </button>
-        <span className="px-2 text-[12px] font-semibold tabular-nums text-foreground">{concern.vote_score}</span>
         <button
           onClick={() => onVote(concern.id, -1)}
           disabled={isVoting}
@@ -106,16 +126,29 @@ function CommunityCard({
         >
           <ThumbsDown className="h-4 w-4" />
           Downvote
+          <span className="font-semibold tabular-nums">{concern.downvoteCount}</span>
         </button>
       </footer>
     </article>
   );
 }
 
-export function BookingsTab() {
+export function BookingsTab({
+  userId,
+  onCreateReport,
+  isHome = false,
+}: {
+  userId: string;
+  onCreateReport?: () => void;
+  isHome?: boolean;
+}) {
   const [filter, setFilter] = useState<ConcernStatus | "all">("all");
   const qc = useQueryClient();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const communityQueryKey = useMemo(
+    () => ["community-concerns", userId, filter] as const,
+    [filter, userId],
+  );
 
   const {
     data,
@@ -124,15 +157,42 @@ export function BookingsTab() {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ["community-concerns", filter],
+    queryKey: communityQueryKey,
     initialPageParam: 0,
     queryFn: ({ pageParam }) => listCommunityConcerns({ status: filter, offset: pageParam, limit: COMMUNITY_PAGE_SIZE }),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     getNextPageParam: (lastPage, allPages) => lastPage.length === COMMUNITY_PAGE_SIZE
       ? allPages.length * COMMUNITY_PAGE_SIZE
       : undefined,
   });
 
   const concerns = data?.pages.flat() ?? [];
+
+  useEffect(() => {
+    const supabase = createClient();
+    const refreshCommunityFeed = () => {
+      qc.invalidateQueries({ queryKey: ["community-concerns", userId] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    };
+    const channel = supabase
+      .channel(`community-feed:${userId}:${filter}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "concern_reports" },
+        refreshCommunityFeed,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "concern_votes" },
+        refreshCommunityFeed,
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [filter, qc, userId]);
 
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -149,30 +209,34 @@ export function BookingsTab() {
   const voteMutation = useMutation({
     mutationFn: ({ reportId, value }: { reportId: string; value: -1 | 1 }) => setConcernVote(reportId, value),
     onMutate: async ({ reportId, value }) => {
-      await qc.cancelQueries({ queryKey: ["community-concerns"] });
-      const previous = qc.getQueriesData<CommunityPages>({ queryKey: ["community-concerns"] });
-
-      previous.forEach(([queryKey]) => {
-        qc.setQueryData<CommunityPages>(queryKey, (current) => {
-          if (!current) return current;
-          return {
-            ...current,
-            pages: current.pages.map((page) => page.map((concern) => {
-              if (concern.id !== reportId) return concern;
-              const scoreChange = concern.userVote === value ? -value : value - (concern.userVote ?? 0);
-              return { ...concern, userVote: concern.userVote === value ? null : value, vote_score: concern.vote_score + scoreChange };
-            })),
-          };
-        });
+      await qc.cancelQueries({ queryKey: communityQueryKey });
+      const previous = qc.getQueryData<CommunityPages>(communityQueryKey);
+      qc.setQueryData<CommunityPages>(communityQueryKey, (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          pages: current.pages.map((page) => page.map((concern) => {
+            if (concern.id !== reportId) return concern;
+            return applyVoteToConcern(concern, value);
+          })),
+        };
       });
-
       return { previous };
     },
     onError: (error, _variables, context) => {
-      context?.previous.forEach(([queryKey, cachedData]) => qc.setQueryData(queryKey, cachedData));
+      qc.setQueryData(communityQueryKey, context?.previous);
       toast.error(error instanceof Error ? error.message : "Vote failed");
     },
-    onSuccess: () => {
+    onSuccess: (voteCounts, { reportId }) => {
+      qc.setQueryData<CommunityPages>(communityQueryKey, (current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          pages: current.pages.map((page) => page.map((concern) => (
+            concern.id === reportId ? { ...concern, ...voteCounts } : concern
+          ))),
+        };
+      });
       qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
     },
@@ -182,23 +246,35 @@ export function BookingsTab() {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground tracking-tight">Community</h2>
+          <h2 className="text-2xl font-semibold text-foreground tracking-tight">{isHome ? "Classroom concerns" : "Community"}</h2>
           <p className="mt-1 text-[14px] text-muted-foreground">
-            Vote on visible classroom concerns so urgent reports are easier to notice.
+            {isHome
+              ? "See the latest visible concerns and help important reports get noticed."
+              : "Vote on visible classroom concerns so urgent reports are easier to notice."}
           </p>
         </div>
-        <div className="flex gap-1 bg-muted rounded-lg p-1 flex-wrap">
-          {STATUS_FILTERS.map((status) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {onCreateReport && (
             <button
-              key={status.value}
-              onClick={() => setFilter(status.value)}
-              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors ${
-                filter === status.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={onCreateReport}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-3 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              {status.label}
+              Create report <ArrowRight className="h-3.5 w-3.5" />
             </button>
-          ))}
+          )}
+          <div className="flex gap-1 bg-muted rounded-lg p-1 flex-wrap">
+            {STATUS_FILTERS.map((status) => (
+              <button
+                key={status.value}
+                onClick={() => setFilter(status.value)}
+                className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                  filter === status.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {status.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

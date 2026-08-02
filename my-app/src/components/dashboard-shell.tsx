@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   SquarePen,
   ClipboardList,
-  MessageSquareText,
   ShieldCheck,
   BarChart3,
   Settings,
@@ -30,7 +29,6 @@ import { ServicesTab } from "@/components/dashboard/tabs/services-tab";
 import { LeadsTab } from "@/components/dashboard/tabs/leads-tab";
 import { BookingsTab } from "@/components/dashboard/tabs/bookings-tab";
 import { BlogTab } from "@/components/dashboard/tabs/blog-tab";
-import { AnalyticsTab } from "@/components/dashboard/tabs/analytics-tab";
 import { SettingsTab } from "@/components/dashboard/tabs/settings-tab";
 import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 
@@ -38,7 +36,6 @@ const ICONS: Record<DashboardTabId, LucideIcon> = {
   home: LayoutDashboard,
   "create-report": SquarePen,
   "track-report": ClipboardList,
-  community: MessageSquareText,
   admin: ShieldCheck,
   analytics: BarChart3,
   settings: Settings,
@@ -62,7 +59,7 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
   const initialTab = (() => {
     const fromQuery = searchParams.get("tab") as DashboardTabId | null;
     const legacyTabs: Record<string, DashboardTabId> = {
-      overview: "home", services: "create-report", leads: "track-report", bookings: "community", blog: "admin",
+      overview: "home", services: "create-report", leads: "track-report", bookings: "home", community: "home", blog: "admin",
     };
     const resolvedTab = fromQuery ? (legacyTabs[fromQuery] ?? fromQuery) : "home";
     return validIds.has(resolvedTab) ? resolvedTab : "home";
@@ -75,7 +72,7 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
 
   React.useEffect(() => {
     const legacyTabs: Record<string, DashboardTabId> = {
-      overview: "home", services: "create-report", leads: "track-report", bookings: "community", blog: "admin",
+      overview: "home", services: "create-report", leads: "track-report", bookings: "home", community: "home", blog: "admin",
     };
     const currentTab = searchParams.get("tab");
     const replacement = currentTab ? legacyTabs[currentTab] : undefined;
@@ -247,12 +244,11 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          {activeTab === "home"          && <OverviewTab displayName={displayName} setTab={setTab} />}
+          {activeTab === "home"          && <BookingsTab userId={user.id} onCreateReport={() => setTab("create-report")} isHome />}
           {activeTab === "create-report" && <ServicesTab />}
           {activeTab === "track-report"  && <LeadsTab />}
-          {activeTab === "community"     && <BookingsTab />}
           {activeTab === "admin"         && <BlogTab />}
-          {activeTab === "analytics" && <AnalyticsTab />}
+          {activeTab === "analytics" && <OverviewTab displayName={displayName} setTab={setTab} />}
           {activeTab === "settings"  && <SettingsTab />}
         </main>
       </div>

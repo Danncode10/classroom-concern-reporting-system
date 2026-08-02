@@ -13,6 +13,8 @@ export type ConcernReportInput = Pick<
 export type CommunityConcern = ConcernReport & {
   authorName: string;
   userVote: number | null;
+  upvoteCount: number;
+  downvoteCount: number;
 };
 
 export const CONCERN_LIMITS = {

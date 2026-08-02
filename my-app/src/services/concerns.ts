@@ -78,7 +78,6 @@ export async function listCommunityConcerns({
     .from("concern_reports")
     .select("*")
     .eq("is_removed", false)
-    .order("vote_score", { ascending: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + Math.min(limit, 25) - 1);
 
@@ -92,12 +91,18 @@ export async function listCommunityConcerns({
   const reportIds = (reports ?? []).map((report) => report.id);
   const authorIds = Array.from(new Set((reports ?? []).map((report) => report.author_id)));
 
-  const [{ data: votes, error: votesError }, { data: profiles, error: profilesError }] = await Promise.all([
+  const [{ data: votes, error: votesError }, { data: allVotes, error: allVotesError }, { data: profiles, error: profilesError }] = await Promise.all([
     reportIds.length
       ? supabase
         .from("concern_votes")
         .select("report_id, value")
         .eq("voter_id", userId)
+        .in("report_id", reportIds)
+      : Promise.resolve({ data: [] as Pick<ConcernVote, "report_id" | "value">[], error: null }),
+    reportIds.length
+      ? supabase
+        .from("concern_votes")
+        .select("report_id, value")
         .in("report_id", reportIds)
       : Promise.resolve({ data: [] as Pick<ConcernVote, "report_id" | "value">[], error: null }),
     authorIds.length
@@ -109,10 +114,19 @@ export async function listCommunityConcerns({
   ]);
 
   if (votesError) throw votesError;
+  if (allVotesError) throw allVotesError;
   if (profilesError) throw profilesError;
 
   const voteByReport = new Map((votes ?? []).map((vote) => [vote.report_id, vote.value]));
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+  const voteCountsByReport = new Map<string, { upvoteCount: number; downvoteCount: number }>();
+
+  for (const vote of allVotes ?? []) {
+    const counts = voteCountsByReport.get(vote.report_id) ?? { upvoteCount: 0, downvoteCount: 0 };
+    if (vote.value === 1) counts.upvoteCount += 1;
+    if (vote.value === -1) counts.downvoteCount += 1;
+    voteCountsByReport.set(vote.report_id, counts);
+  }
 
   return (reports ?? []).map((report): CommunityConcern => {
     const author = profileById.get(report.author_id);
@@ -120,6 +134,8 @@ export async function listCommunityConcerns({
       ...report,
       authorName: author?.full_name || author?.school_id || "NVSU user",
       userVote: voteByReport.get(report.id) ?? null,
+      upvoteCount: voteCountsByReport.get(report.id)?.upvoteCount ?? 0,
+      downvoteCount: voteCountsByReport.get(report.id)?.downvoteCount ?? 0,
     };
   });
 }
@@ -157,5 +173,15 @@ export async function setConcernVote(reportId: string, value: -1 | 1) {
     if (error) throw error;
   }
 
+  const { data: votes, error: votesError } = await supabase
+    .from("concern_votes")
+    .select("value")
+    .eq("report_id", reportId);
+  if (votesError) throw votesError;
+
+  const upvoteCount = (votes ?? []).filter((vote) => vote.value === 1).length;
+  const downvoteCount = (votes ?? []).filter((vote) => vote.value === -1).length;
+
   revalidatePath("/dashboard");
+  return { upvoteCount, downvoteCount };
 }

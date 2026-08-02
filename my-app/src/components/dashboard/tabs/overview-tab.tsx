@@ -60,7 +60,7 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
   const quickActions: Array<{ label: string; desc: string; tab: DashboardTabId; flag: FeatureFlag }> = [
     { label: "Create report",     desc: "Submit a classroom concern", tab: "create-report" as const, flag: "pricing" as const },
     { label: "Track report",      desc: "Check your submitted reports", tab: "track-report" as const, flag: "contactForm" as const },
-    { label: "Community",         desc: "See visible student concerns", tab: "community" as const, flag: "contactForm" as const },
+    { label: "Home feed",         desc: "See visible student concerns", tab: "home" as const, flag: "always" as const },
     { label: "Account settings",  desc: "Profile and security",        tab: "settings" as const, flag: "always" as const },
   ].filter(a => isFeatureEnabled(a.flag));
 
