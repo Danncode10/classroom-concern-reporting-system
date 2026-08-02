@@ -6,7 +6,7 @@ SET search_path = public, private
 AS $$
 BEGIN
   IF (select auth.uid()) IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
+    RETURN NEW;
   END IF;
 
   IF NOT private.is_admin() THEN

@@ -48,7 +48,7 @@ export async function listAdminConcernReports(status: ConcernStatus | "all" = "a
   let query = supabase
     .from("concern_reports")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (status !== "all") query = query.eq("status", status);
 
