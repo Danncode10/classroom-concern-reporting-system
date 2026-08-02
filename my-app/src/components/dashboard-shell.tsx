@@ -3,10 +3,10 @@
 import * as React from "react";
 import {
   LayoutDashboard,
-  Tag,
-  Inbox,
-  Calendar,
-  BookOpen,
+  SquarePen,
+  ClipboardList,
+  MessageSquareText,
+  ShieldCheck,
   BarChart3,
   Settings,
   LogOut,
@@ -18,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { siteConfig } from "@/lib/config";
@@ -35,23 +36,27 @@ import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 
 const ICONS: Record<DashboardTabId, LucideIcon> = {
   overview: LayoutDashboard,
-  services: Tag,
-  leads: Inbox,
-  bookings: Calendar,
-  blog: BookOpen,
+  services: SquarePen,
+  leads: ClipboardList,
+  bookings: MessageSquareText,
+  blog: ShieldCheck,
   analytics: BarChart3,
   settings: Settings,
 };
 
 interface DashboardShellProps {
   user: SupabaseUser;
-  profile: { full_name?: string | null; role?: string | null } | null;
+  profile: { full_name?: string | null; school_id?: string | null; role?: string | null } | null;
 }
 
 export function DashboardShell({ user, profile }: DashboardShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const enabledTabs = React.useMemo(() => getEnabledTabs(), []);
+  const isAdmin = profile?.role === "admin";
+  const enabledTabs = React.useMemo(
+    () => getEnabledTabs().filter((tab) => tab.id !== "blog" || isAdmin),
+    [isAdmin],
+  );
   const validIds = React.useMemo(() => new Set(enabledTabs.map((t) => t.id)), [enabledTabs]);
 
   const initialTab = (() => {
@@ -64,7 +69,7 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [userMenuOpen, setUserMenuOpen] = React.useState(false);
 
-  const displayName = profile?.full_name || user.email?.split("@")[0] || "there";
+  const displayName = profile?.full_name || profile?.school_id || user.email?.split("@")[0] || "there";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
 
   const setTab = React.useCallback((tab: DashboardTabId) => {
@@ -103,14 +108,14 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
       `}>
 
         <div className="h-14 flex items-center justify-between px-3 border-b border-border shrink-0">
-          <a href="/" className={`flex items-center gap-2.5 overflow-hidden ${collapsed ? "md:justify-center md:w-full" : ""}`}>
+          <Link href="/" className={`flex items-center gap-2.5 overflow-hidden ${collapsed ? "md:justify-center md:w-full" : ""}`}>
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/70 shadow-[0_2px_8px_rgba(220,38,38,0.4)] shrink-0">
               <span className="text-[11px] font-black text-white">{siteConfig.name.charAt(0)}</span>
             </div>
             <span className={`text-sm font-bold tracking-tight text-foreground whitespace-nowrap ${collapsed ? "md:hidden" : ""}`}>
               {siteConfig.name}
             </span>
-          </a>
+          </Link>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1 text-muted-foreground hover:text-foreground rounded-md">
             <X className="w-4 h-4" />
           </button>

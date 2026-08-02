@@ -2,7 +2,7 @@
 
 # NVSU Classroom Concern Reporting System MVP
 
-> **Status:** MVP planning  
+> **Status:** MVP in progress  
 > **App folder:** `my-app`  
 > **Approach:** Tweak the existing Dannflow app instead of rebuilding the UI structure.
 
@@ -16,18 +16,20 @@ The app already has authentication, landing pages, dashboard layout, sidebar nav
 
 ### Landing Page
 
-- Replace the generic Dannflow landing page copy with NVSU classroom concern reporting content.
-- Keep the existing layout structure where possible.
-- Make the first screen clearly explain that users can post, track, and support classroom concerns.
-- Remove or hide non-MVP sections such as pricing, marketing blog previews, leads, bookings, and generic SaaS content.
+- [x] Replace the generic Dannflow landing page copy with NVSU classroom concern reporting content.
+- [x] Keep the existing layout structure where possible.
+- [x] Make the first screen clearly explain that users can post, track, and support classroom concerns.
+- [x] Remove or hide non-MVP sections such as pricing, marketing blog previews, leads, bookings, and generic SaaS content.
 
 ### Login Page
 
-- Change login from email-based login to ID-number based login.
-- Use ID number format like `XXX-XXXX`.
-- Keep password login.
-- Remove email verification and sign-up flow for normal users.
-- Users will be manually created in Supabase by an admin.
+- [x] Change login from email-based login to ID-number based login.
+- [x] Use ID number format like `XXX-XXXX`.
+- [x] Keep password login.
+- [x] Remove email verification and sign-up flow for normal users.
+- [x] Users will be manually created in Supabase by an admin.
+
+Note: Supabase Auth still requires an email or phone internally. For the MVP, create users in Supabase using the format `123-4567@nvsu.local`, but users will only type `123-4567` in the app. The login page converts the ID number into the internal Supabase email automatically.
 
 ### Dashboard Sidebar
 
@@ -54,11 +56,15 @@ The app already has authentication, landing pages, dashboard layout, sidebar nav
 
 ### Supabase
 
-- Use the existing Supabase project for the app.
-- Update `.env.local` with the correct Supabase project ID and database connection host.
-- Add only the schema needed for the MVP.
-- Create tables for profiles, reports, votes, status history, and moderation actions.
-- Use role-based access so normal users and admins have different permissions.
+- [x] Use the existing Supabase project for the app.
+- [x] Update `.env.local` with the correct Supabase project ID and database connection host.
+- [x] Add the schema needed for the MVP while keeping Dannflow's existing starter tables available.
+- [x] Create tables for profiles, reports, votes, status history, and moderation actions.
+- [x] Use role-based access so normal users and admins have different permissions.
+
+Note: Supabase Auth users should still be created as `123-4567@nvsu.local`. The app stores the real school ID in `profiles.school_id`. Add the student's or professor's real display name in `profiles.full_name`; the dashboard will use that name when it exists.
+
+Note: `DATABASE_URL` needs the real Supabase database password, which Supabase does not reveal through MCP. The live schema was applied through Supabase MCP for now, and the repo has the migration recorded for later CLI use once the database password is added.
 
 ### MVP Acceptance Criteria
 

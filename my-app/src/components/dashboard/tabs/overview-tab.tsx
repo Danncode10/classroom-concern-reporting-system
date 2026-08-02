@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { FileText, Inbox, TrendingUp, LayoutDashboard } from "lucide-react";
+import { FileText, Inbox, TrendingUp, MessageSquareText } from "lucide-react";
 import { getDashboardStats, getRecentActivity } from "@/services/dashboard-stats";
 import type { DashboardTabId } from "@/lib/dashboard-features";
 import { isFeatureEnabled, type FeatureFlag } from "@/lib/dashboard-features";
@@ -58,11 +58,10 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
   });
 
   const quickActions: Array<{ label: string; desc: string; tab: DashboardTabId; flag: FeatureFlag }> = [
-    { label: "Edit services & pricing",   desc: "Update prices live",       tab: "services" as const, flag: "pricing" as const },
-    { label: "View leads",                desc: "See who reached out",      tab: "leads" as const,    flag: "contactForm" as const },
-    { label: "Manage bookings",           desc: "Confirm appointments",     tab: "bookings" as const, flag: "contactForm" as const },
-    { label: "View analytics",            desc: "Page views & traffic",     tab: "analytics" as const, flag: "analytics" as const },
-    { label: "Account settings",          desc: "Profile & security",       tab: "settings" as const, flag: "always" as const },
+    { label: "Create report",     desc: "Submit a classroom concern", tab: "services" as const, flag: "pricing" as const },
+    { label: "Track report",      desc: "Check your submitted reports", tab: "leads" as const, flag: "contactForm" as const },
+    { label: "Community",         desc: "See visible student concerns", tab: "bookings" as const, flag: "contactForm" as const },
+    { label: "Account settings",  desc: "Profile and security",        tab: "settings" as const, flag: "always" as const },
   ].filter(a => isFeatureEnabled(a.flag));
 
   return (
@@ -75,10 +74,10 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Active Services"   value={stats?.publishedServices ?? "—"} note="Live on your site"        icon={FileText}        accent="bg-primary/10" />
-        <StatCard label="Today's Leads"     value={stats?.todayLeads ?? "—"}        note={`${stats?.newLeads ?? 0} new total`} icon={Inbox}      accent="bg-amber-500/10" />
-        <StatCard label="Total Bookings"    value={stats?.totalBookings ?? "—"}     note={`${stats?.pendingBookings ?? 0} pending`} icon={TrendingUp} accent="bg-blue-500/10" />
-        <StatCard label="Gallery Items"     value={stats?.galleryPublished ?? "—"}  note="Published"                 icon={LayoutDashboard} accent="bg-rose-500/10" />
+        <StatCard label="Open Reports"      value={stats?.publishedServices ?? "—"} note="Needs review"               icon={FileText}          accent="bg-primary/10" />
+        <StatCard label="New Today"         value={stats?.todayLeads ?? "—"}        note={`${stats?.newLeads ?? 0} new total`} icon={Inbox}    accent="bg-amber-500/10" />
+        <StatCard label="In Progress"       value={stats?.pendingBookings ?? "—"}   note="Being handled"              icon={TrendingUp}       accent="bg-blue-500/10" />
+        <StatCard label="Community Posts"   value={stats?.totalBookings ?? "—"}     note="Visible concerns"           icon={MessageSquareText} accent="bg-rose-500/10" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

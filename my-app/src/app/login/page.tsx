@@ -1,45 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { signUpWithEmail } from '@/services/auth';
-import { signInWithEmailRateLimited, signUpWithEmailRateLimited } from '@/services/auth-server';
+import { signInWithEmailRateLimited } from '@/services/auth-server';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2, Check } from 'lucide-react';
+import { IdCard, Lock, Eye, EyeOff, ArrowRight, Loader2, Check } from 'lucide-react';
+
+const SCHOOL_ID_PATTERN = /^\d{3}-\d{4}$/;
+const schoolIdToAuthEmail = (schoolId: string) => `${schoolId.trim().toLowerCase()}@nvsu.local`;
+const formatSchoolIdInput = (value: string) => {
+  const digits = value.replace(/\D/g, '').slice(0, 7);
+  return digits.length > 3 ? `${digits.slice(0, 3)}-${digits.slice(3)}` : digits;
+};
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [formKey, setFormKey] = useState(0);
-  const [email, setEmail] = useState('');
+  const [schoolId, setSchoolId] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [windowWidth, setWindowWidth] = useState(1024);
+  const [windowWidth, setWindowWidth] = useState(() =>
+    typeof window === 'undefined' ? 1024 : window.innerWidth
+  );
   const router = useRouter();
 
   useEffect(() => {
-    setWindowWidth(window.innerWidth);
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    const saved = localStorage.getItem('df_auth_mode');
-    if (saved) setMode(saved as 'login' | 'signup');
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const switchMode = (m: 'login' | 'signup') => {
-    setMode(m);
-    localStorage.setItem('df_auth_mode', m);
-    setFormKey(k => k + 1);
-    setError('');
-    setSuccess(false);
-    setEmail('');
-    setPassword('');
-    setName('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,41 +38,30 @@ export default function AuthPage() {
     setError('');
 
     try {
-      if (mode === 'login') {
-        const result = await signInWithEmailRateLimited(email, password);
-        if (result.requiresMFA) {
-          router.push('/auth/mfa');
-        } else {
-          setSuccess(true);
-          setTimeout(() => {
-            toast.success('Login successful!');
-            router.push('/dashboard');
-            router.refresh();
-          }, 800);
-        }
+      const normalizedSchoolId = schoolId.trim();
+      if (!SCHOOL_ID_PATTERN.test(normalizedSchoolId)) {
+        throw new Error('Enter your school ID using the format XXX-XXXX.');
+      }
+
+      const result = await signInWithEmailRateLimited(schoolIdToAuthEmail(normalizedSchoolId), password);
+      if (result.requiresMFA) {
+        router.push('/auth/mfa');
       } else {
-        await signUpWithEmailRateLimited(email, password, window.location.origin);
         setSuccess(true);
         setTimeout(() => {
-          toast.success('Account created!', { description: 'Check your email for confirmation.' });
+          toast.success('Login successful!');
+          router.push('/dashboard');
+          router.refresh();
         }, 800);
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   const isDesktop = windowWidth >= 900;
-  const passwordScore = (() => {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-    return score;
-  })();
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-background)', color: 'var(--color-foreground)', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
@@ -156,7 +136,7 @@ export default function AuthPage() {
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              background: 'linear-gradient(145deg, rgba(108, 71, 255,0.05) 0%, transparent 55%)',
+              background: 'linear-gradient(145deg, rgba(11, 122, 42, 0.08) 0%, transparent 55%)',
             }} />
 
             {/* Orbital Ring */}
@@ -167,7 +147,7 @@ export default function AuthPage() {
               width: 180,
               height: 180,
               borderRadius: '50%',
-              border: '1px solid rgba(108, 71, 255,0.125)',
+              border: '1px solid rgba(11, 122, 42, 0.18)',
               pointerEvents: 'none',
             }}>
               <div style={{
@@ -192,54 +172,54 @@ export default function AuthPage() {
                   width: 34,
                   height: 34,
                   borderRadius: 8,
-                  background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
+                  background: 'linear-gradient(135deg, #0B7A2A, #C62828)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 'bold',
                   fontSize: 14,
                   color: 'white',
-                  boxShadow: '0 0 18px rgba(108, 71, 255,0.333)',
-                }}>D</div>
-                <span style={{ fontSize: 18, fontWeight: 'bold', letterSpacing: -0.025, color: '#F0EEFF' }}>DannFlow</span>
+                  boxShadow: '0 10px 22px rgba(11, 122, 42, 0.18)',
+                }}>N</div>
+                <span style={{ fontSize: 18, fontWeight: 'bold', letterSpacing: 0, color: 'var(--color-foreground)' }}>NVSU Concerns</span>
                 <span style={{
                   padding: '2px 7px',
                   borderRadius: 5,
-                  background: 'rgba(108, 71, 255,0.125)',
-                  border: '1px solid rgba(108, 71, 255,0.25)',
+                  background: 'var(--color-secondary)',
+                  border: '1px solid var(--color-border)',
                   fontSize: 10,
                   color: 'var(--color-primary)',
-                  letterSpacing: 0.06,
-                }}>v2.0</span>
+                  letterSpacing: 0,
+                }}>MVP</span>
               </div>
 
               {/* Headline */}
-              <h1 style={{ fontSize: 32, fontWeight: 'bold', lineHeight: 1.18, marginBottom: 14, letterSpacing: -0.03 }}>
-                Ship your idea.
+              <h1 style={{ fontSize: 32, fontWeight: 'bold', lineHeight: 1.18, marginBottom: 14, letterSpacing: 0, color: 'var(--color-foreground)' }}>
+                Sign in to report
                 <br />
                 <span style={{
-                  background: 'linear-gradient(90deg, var(--color-primary), #60A5FA, var(--color-primary))',
+                  background: 'linear-gradient(90deg, #0B7A2A, #C62828, #0B7A2A)',
                   backgroundSize: '200% auto',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   animation: 'shimmer 3s linear infinite',
-                }}>Not boilerplate.</span>
+                }}>classroom concerns.</span>
               </h1>
 
-              <p style={{ fontSize: 13.5, color: '#9490B5', lineHeight: 1.7, maxWidth: 290, marginBottom: 36 }}>
-                The AI-native Next.js boilerplate for builders who ship. Plug in your vision — we handle the rest.
+              <p style={{ fontSize: 13.5, color: 'var(--color-muted-foreground)', lineHeight: 1.7, maxWidth: 290, marginBottom: 36 }}>
+                Use your school ID to access the shared reporting space for classroom issues, updates, and concern tracking.
               </p>
 
               {/* Features */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {['Next.js 15 + Supabase auth built-in', 'AI-native architecture & MCP ready', 'Deploy to Vercel in under 2 minutes', 'Checkpoint rollback system'].map((f, i) => (
+                {['Post classroom concerns', 'Track report status', 'Support visible concerns', 'Admin-reviewed updates'].map((f, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                     <div style={{
                       width: 20,
                       height: 20,
                       borderRadius: 6,
-                      background: 'rgba(108, 71, 255,0.09)',
-                      border: '1px solid rgba(108, 71, 255,0.22)',
+                      background: 'var(--color-secondary)',
+                      border: '1px solid var(--color-border)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -248,7 +228,7 @@ export default function AuthPage() {
                     }}>
                       <Check size={11} />
                     </div>
-                    <span style={{ fontSize: 13, color: '#C4C0E0', lineHeight: 1.4 }}>{f}</span>
+                    <span style={{ fontSize: 13, color: 'var(--color-foreground)', lineHeight: 1.4 }}>{f}</span>
                   </div>
                 ))}
               </div>
@@ -261,8 +241,8 @@ export default function AuthPage() {
               gap: 10,
               padding: '13px 15px',
               borderRadius: 10,
-              background: 'rgba(108, 71, 255,0.04)',
-              border: '1px solid rgba(108, 71, 255,0.133)',
+              background: 'rgba(11, 122, 42, 0.06)',
+              border: '1px solid rgba(11, 122, 42, 0.18)',
               position: 'relative',
               zIndex: 1,
             }}>
@@ -275,7 +255,7 @@ export default function AuthPage() {
                 boxShadow: '0 0 7px #22C55E',
                 animation: 'pulse-dot 2s ease-in-out infinite',
               }} />
-              <span style={{ fontSize: 11, color: '#9490B5' }}>All systems operational</span>
+              <span style={{ fontSize: 11, color: 'var(--color-muted-foreground)' }}>Manual school accounts only</span>
             </div>
           </div>
         )}
@@ -291,46 +271,28 @@ export default function AuthPage() {
           zIndex: 10,
         }}>
           <div style={{ width: '100%', maxWidth: 400, animation: 'fadeUp 0.45s ease both' }}>
-            {/* Tabs */}
-            <div style={{
-              display: 'flex',
-              background: '#13131F',
-              borderRadius: 11,
-              padding: 3,
-              marginBottom: 32,
-              border: '1px solid var(--color-border)',
-              gap: 4,
-            }}>
-              {(['login', 'signup'] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => switchMode(m)}
-                  style={{
-                    flex: 1,
-                    padding: '10px 0',
-                    background: mode === m ? 'var(--color-primary)' : 'transparent',
-                    border: 'none',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    color: mode === m ? '#fff' : '#9490B5',
-                    fontWeight: 600,
-                    fontSize: 13,
-                    transition: 'all 0.2s',
-                    boxShadow: mode === m ? '0 2px 10px rgba(108, 71, 255,0.314)' : 'none',
-                  }}
-                >
-                  {m === 'login' ? 'Sign In' : 'Create Account'}
-                </button>
-              ))}
-            </div>
-
             {/* Heading */}
             <div style={{ marginBottom: 24 }}>
-              <h2 style={{ fontSize: 26, fontWeight: 'bold', letterSpacing: -0.025, marginBottom: 5, color: '#F0EEFF' }}>
-                {mode === 'login' ? 'Welcome back' : 'Start building'}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 10px',
+                borderRadius: 999,
+                background: 'var(--color-secondary)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-primary)',
+                fontSize: 11,
+                fontWeight: 700,
+                marginBottom: 14,
+              }}>
+                School ID Login
+              </div>
+              <h2 style={{ fontSize: 28, fontWeight: 'bold', letterSpacing: 0, marginBottom: 7, color: 'var(--color-foreground)' }}>
+                Welcome back
               </h2>
-              <p style={{ fontSize: 13, color: '#9490B5', lineHeight: 1.55 }}>
-                {mode === 'login' ? 'Access Mission Control — your launchpad awaits.' : 'Create your account and ship your first idea today.'}
+              <p style={{ fontSize: 13, color: 'var(--color-muted-foreground)', lineHeight: 1.55 }}>
+                Enter the ID number and password given by the school admin.
               </p>
             </div>
 
@@ -340,63 +302,36 @@ export default function AuthPage() {
                 padding: 28,
                 borderRadius: 12,
                 textAlign: 'center',
-                background: 'rgba(34,197,94,0.07)',
-                border: '1px solid rgba(34,197,94,0.22)',
+                background: 'rgba(11, 122, 42, 0.08)',
+                border: '1px solid rgba(11, 122, 42, 0.22)',
                 animation: 'fadeUp 0.35s ease both',
               }}>
                 <div style={{ fontSize: 28, marginBottom: 10 }}>✓</div>
-                <p style={{ fontWeight: 600, marginBottom: 5, color: '#F0EEFF' }}>
-                  {mode === 'login' ? 'Welcome back!' : 'Account created!'}
+                <p style={{ fontWeight: 600, marginBottom: 5, color: 'var(--color-foreground)' }}>
+                  Welcome back!
                 </p>
-                <p style={{ fontSize: 12, color: '#9490B5' }}>
-                  {mode === 'login' ? 'Redirecting to Mission Control...' : 'Check your email for confirmation.'}
+                <p style={{ fontSize: 12, color: 'var(--color-muted-foreground)' }}>
+                  Redirecting to your dashboard...
                 </p>
               </div>
             ) : (
-              <form key={formKey} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {mode === 'signup' && (
-                  <div style={{ animation: 'slideIn 0.25s ease both' }}>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: 0.08, textTransform: 'uppercase', color: '#9490B5', marginBottom: 6 }}>
-                      Full name
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <User size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#9490B5', pointerEvents: 'none' }} />
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        placeholder="Dann Lopez"
-                        style={{
-                          width: '100%',
-                          paddingLeft: 40,
-                          paddingRight: 14,
-                          paddingTop: 12,
-                          paddingBottom: 12,
-                          background: 'rgba(19,19,31,0.8)',
-                          border: '1px solid var(--color-border)',
-                          borderRadius: 9,
-                          color: '#F0EEFF',
-                          fontSize: 14,
-                          outline: 'none',
-                          transition: 'all 0.18s',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
+              <form noValidate onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: 0.08, textTransform: 'uppercase', color: '#9490B5', marginBottom: 6 }}>
-                    Email address
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: 0.02, textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: 6 }}>
+                    School ID number
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <Mail size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#9490B5', pointerEvents: 'none' }} />
+                    <IdCard size={16} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted-foreground)', pointerEvents: 'none' }} />
                     <input
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="dann@example.com"
+                      type="text"
+                      inputMode="numeric"
+                      value={schoolId}
+                      onChange={e => setSchoolId(formatSchoolIdInput(e.target.value))}
+                      placeholder="123-4567"
+                      pattern="[0-9]{3}-[0-9]{4}"
+                      title="Use the format XXX-XXXX"
+                      autoComplete="username"
+                      maxLength={8}
                       required
                       style={{
                         width: '100%',
@@ -404,10 +339,10 @@ export default function AuthPage() {
                         paddingRight: 14,
                         paddingTop: 12,
                         paddingBottom: 12,
-                        background: 'rgba(19,19,31,0.8)',
+                        background: 'var(--color-card)',
                         border: '1px solid var(--color-border)',
                         borderRadius: 9,
-                        color: '#F0EEFF',
+                        color: 'var(--color-foreground)',
                         fontSize: 14,
                         outline: 'none',
                         transition: 'all 0.18s',
@@ -418,16 +353,17 @@ export default function AuthPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, letterSpacing: 0.08, textTransform: 'uppercase', color: '#9490B5', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, letterSpacing: 0.02, textTransform: 'uppercase', color: 'var(--color-muted-foreground)', marginBottom: 6 }}>
                     Password
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <Lock size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#9490B5', pointerEvents: 'none' }} />
+                    <Lock size={15} style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-muted-foreground)', pointerEvents: 'none' }} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      placeholder={mode === 'login' ? '••••••••' : 'Min. 8 characters'}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
                       required
                       style={{
                         width: '100%',
@@ -435,10 +371,10 @@ export default function AuthPage() {
                         paddingRight: 40,
                         paddingTop: 12,
                         paddingBottom: 12,
-                        background: 'rgba(19,19,31,0.8)',
+                        background: 'var(--color-card)',
                         border: '1px solid var(--color-border)',
                         borderRadius: 9,
-                        color: '#F0EEFF',
+                        color: 'var(--color-foreground)',
                         fontSize: 14,
                         outline: 'none',
                         transition: 'all 0.18s',
@@ -456,7 +392,7 @@ export default function AuthPage() {
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: '#9490B5',
+                        color: 'var(--color-muted-foreground)',
                         padding: 0,
                         display: 'flex',
                         alignItems: 'center',
@@ -466,45 +402,20 @@ export default function AuthPage() {
                     </button>
                   </div>
 
-                  {mode === 'signup' && password && (
-                    <div style={{ marginTop: 7 }}>
-                      <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
-                        {[0, 1, 2, 3].map(i => {
-                          const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
-                          return (
-                            <div key={i} style={{
-                              flex: 1,
-                              height: 3,
-                              borderRadius: 2,
-                              background: i < passwordScore ? colors[passwordScore - 1] : 'var(--color-border)',
-                              transition: 'background 0.25s',
-                            }} />
-                          );
-                        })}
-                      </div>
-                      <p style={{ fontSize: 10, color: passwordScore > 0 ? ['#ef4444', '#f97316', '#eab308', '#22c55e'][passwordScore - 1] : '#9490B5' }}>
-                        {passwordScore > 0 ? ['Weak', 'Fair', 'Good', 'Strong'][passwordScore - 1] : ''}
-                      </p>
-                    </div>
-                  )}
                 </div>
 
-                {mode === 'login' && (
-                  <div style={{ textAlign: 'right', marginTop: -4 }}>
-                    <Link href="/forgot-password" style={{ fontSize: 11, color: '#9490B5', textDecoration: 'none', letterSpacing: 0.05, transition: 'color 0.2s', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget as any).style.color = 'var(--color-primary)'} onMouseLeave={e => (e.currentTarget as any).style.color = '#9490B5'}>
-                      FORGOT PASSWORD?
-                    </Link>
-                  </div>
-                )}
+                <p style={{ fontSize: 12, color: 'var(--color-muted-foreground)', lineHeight: 1.55, marginTop: -4 }}>
+                  No account creation here. Admins manually add school IDs in Supabase before students or professors can sign in.
+                </p>
 
                 {error && (
                   <div style={{
                     padding: '10px 13px',
                     borderRadius: 8,
-                    background: 'rgba(239,68,68,0.07)',
-                    border: '1px solid rgba(239,68,68,0.22)',
+                    background: 'rgba(198, 40, 40, 0.08)',
+                    border: '1px solid rgba(198, 40, 40, 0.22)',
                     fontSize: 12,
-                    color: '#f87171',
+                    color: 'var(--color-destructive)',
                   }}>
                     {error}
                   </div>
@@ -517,7 +428,7 @@ export default function AuthPage() {
                     width: '100%',
                     padding: '13px 0',
                     marginTop: 2,
-                    background: loading ? 'rgba(108, 71, 255,0.375)' : 'linear-gradient(135deg, var(--color-primary), var(--color-primary))',
+                    background: loading ? 'rgba(11, 122, 42, 0.55)' : 'linear-gradient(135deg, #0B7A2A, #086322)',
                     border: 'none',
                     borderRadius: 10,
                     cursor: loading ? 'not-allowed' : 'pointer',
@@ -528,11 +439,19 @@ export default function AuthPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
-                    boxShadow: loading ? 'none' : `0 4px 18px rgba(108, 71, 255,0.267), 0 0 0 1px rgba(255,255,255,0.06)`,
+                    boxShadow: loading ? 'none' : `0 8px 22px rgba(11, 122, 42, 0.18)`,
                     transition: 'all 0.18s',
                   }}
-                  onMouseEnter={e => { if (!loading) { (e.currentTarget as any).style.transform = 'translateY(-1px)'; (e.currentTarget as any).style.boxShadow = `0 6px 24px rgba(108, 71, 255,0.333), 0 0 0 1px rgba(255,255,255,0.1)`; } }}
-                  onMouseLeave={e => { (e.currentTarget as any).style.transform = 'translateY(0)'; (e.currentTarget as any).style.boxShadow = `0 4px 18px rgba(108, 71, 255,0.267), 0 0 0 1px rgba(255,255,255,0.06)`; }}
+                  onMouseEnter={e => {
+                    if (!loading) {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 10px 26px rgba(11, 122, 42, 0.24)';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 8px 22px rgba(11, 122, 42, 0.18)';
+                  }}
                 >
                   {loading ? (
                     <>
@@ -541,47 +460,26 @@ export default function AuthPage() {
                     </>
                   ) : (
                     <>
-                      {mode === 'login' ? 'Sign In' : 'Create Account'}
+                      Sign In
                       <ArrowRight size={16} />
                     </>
                   )}
                 </button>
-
-                {mode === 'signup' && (
-                  <p style={{ fontSize: 11, color: '#5A5680', textAlign: 'center', lineHeight: 1.55 }}>
-                    By signing up you agree to the{' '}
-                    <Link href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Terms</Link>{' '}and{' '}
-                    <Link href="#" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Privacy Policy</Link>.
-                  </p>
-                )}
               </form>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '22px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-              <span style={{ fontSize: 10, color: '#5A5680' }}>OR</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--color-border)' }} />
-            </div>
-
-            <button type="button" style={{
-              width: '100%',
-              padding: '12px 0',
-              background: '#13131F',
-              border: '1px solid var(--color-border)',
+            <div style={{
+              marginTop: 22,
+              padding: '12px 14px',
               borderRadius: 10,
-              color: '#F0EEFF',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 9,
-              transition: 'all 0.18s',
-            }} onMouseEnter={e => { (e.currentTarget as any).style.borderColor = '#4A4670'; (e.currentTarget as any).style.background = '#1A1A2E'; }} onMouseLeave={e => { (e.currentTarget as any).style.borderColor = 'var(--color-border)'; (e.currentTarget as any).style.background = '#13131F'; }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>
-              Continue with GitHub
-            </button>
+              background: 'var(--color-secondary)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-muted-foreground)',
+              fontSize: 12,
+              lineHeight: 1.55,
+            }}>
+              Example account email in Supabase: <strong style={{ color: 'var(--color-foreground)' }}>123-4567@nvsu.local</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -597,13 +495,13 @@ export default function AuthPage() {
         alignItems: 'center',
         flexWrap: 'wrap',
         gap: 8,
-        background: 'rgba(10,10,15,0.75)',
+        background: 'rgba(255, 255, 255, 0.78)',
         backdropFilter: 'blur(10px)',
       }}>
-        <span style={{ fontSize: 11, color: '#5A5680' }}>© 2026 DannFlow</span>
+        <span style={{ fontSize: 11, color: 'var(--color-muted-foreground)' }}>© 2026 NVSU Concerns</span>
         <div style={{ display: 'flex', gap: 18 }}>
           {['Privacy', 'Terms', 'Docs'].map(l => (
-            <Link key={l} href="#" style={{ fontSize: 11, color: '#5A5680', textDecoration: 'none', transition: 'color 0.2s', cursor: 'pointer' }} onMouseEnter={e => (e.currentTarget as any).style.color = 'var(--color-primary)'} onMouseLeave={e => (e.currentTarget as any).style.color = '#5A5680'}>{l}</Link>
+            <Link key={l} href="#" style={{ fontSize: 11, color: 'var(--color-muted-foreground)', textDecoration: 'none', transition: 'color 0.2s', cursor: 'pointer' }} onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-primary)'; }} onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-muted-foreground)'; }}>{l}</Link>
           ))}
         </div>
       </div>

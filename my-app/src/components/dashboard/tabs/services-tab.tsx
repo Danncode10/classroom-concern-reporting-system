@@ -87,9 +87,9 @@ export function ServicesTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground tracking-tight">Services</h2>
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">Create Report</h2>
         <p className="mt-1 text-[14px] text-muted-foreground">
-          Edit names, prices, and visibility. Changes go live immediately.
+          Submit classroom issues so they can be reviewed and assigned a status.
         </p>
       </div>
 
@@ -97,17 +97,17 @@ export function ServicesTab() {
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
         ) : (services ?? []).length === 0 ? (
-          <div className="p-12 text-center text-[13px] text-muted-foreground">No services yet.</div>
+          <div className="p-12 text-center text-[13px] text-muted-foreground">Report form will appear here.</div>
         ) : (
           <table className="w-full text-[13px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                <th className="px-5 py-3">Service</th>
-                <th className="px-3 py-3">Price From</th>
-                <th className="px-3 py-3">Price To</th>
-                <th className="px-3 py-3">Duration</th>
-                <th className="px-3 py-3">Published</th>
-                <th className="px-3 py-3">Featured</th>
+                <th className="px-5 py-3">Report Type</th>
+                <th className="px-3 py-3">Priority From</th>
+                <th className="px-3 py-3">Priority To</th>
+                <th className="px-3 py-3">Target</th>
+                <th className="px-3 py-3">Visible</th>
+                <th className="px-3 py-3">Pinned</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -154,7 +154,7 @@ export function ServicesTab() {
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Tip: Click any field to edit. All changes are logged in <code>audit_logs</code>.
+        Next step: wire this tab to <code>concern_reports</code>.
       </p>
     </div>
   );
