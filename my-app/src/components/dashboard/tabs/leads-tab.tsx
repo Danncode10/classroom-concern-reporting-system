@@ -1,47 +1,69 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { Loader2, Mail, Phone, Trash2 } from "lucide-react";
-import { listLeads, updateLeadStatus, deleteLead } from "@/services/leads";
+import { useQuery } from "@tanstack/react-query";
+import { ClipboardList, Loader2, MapPin } from "lucide-react";
+import { listMyConcernReports, type ConcernReport, type ConcernStatus } from "@/services/concerns";
 
-const STATUSES = ["all", "new", "contacted", "booked", "closed"] as const;
+const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "submitted", label: "Submitted" },
+  { value: "in_review", label: "In review" },
+  { value: "in_progress", label: "In progress" },
+  { value: "resolved", label: "Resolved" },
+  { value: "rejected", label: "Rejected" },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  new: "bg-amber-500/10 text-amber-500",
-  contacted: "bg-blue-500/10 text-blue-500",
-  booked: "bg-emerald-500/10 text-emerald-500",
-  closed: "bg-muted text-muted-foreground",
+const STATUS_STYLES: Record<ConcernStatus, string> = {
+  submitted: "bg-amber-500/10 text-amber-600",
+  in_review: "bg-blue-500/10 text-blue-600",
+  in_progress: "bg-primary/10 text-primary",
+  resolved: "bg-emerald-500/10 text-emerald-600",
+  rejected: "bg-destructive/10 text-destructive",
 };
 
+function formatStatus(status: ConcernStatus) {
+  return status.replace(/_/g, " ");
+}
+
+function ReportCard({ report }: { report: ConcernReport }) {
+  return (
+    <article className="px-5 py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-foreground">{report.title}</h3>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${STATUS_STYLES[report.status]}`}>
+              {formatStatus(report.status)}
+            </span>
+          </div>
+          <p className="mt-2 text-[13px] text-muted-foreground whitespace-pre-wrap">{report.description}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="capitalize">{report.category}</span>
+            {report.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {report.location}
+              </span>
+            )}
+            <span>{new Date(report.created_at).toLocaleString()}</span>
+          </div>
+        </div>
+        <div className="text-left sm:text-right">
+          <p className="text-[11px] text-muted-foreground">Votes</p>
+          <p className="text-xl font-semibold text-foreground tabular-nums">{report.vote_score}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function LeadsTab() {
-  const [filter, setFilter] = useState<string>("all");
-  const qc = useQueryClient();
+  const [filter, setFilter] = useState<ConcernStatus | "all">("all");
 
-  const { data: leads, isLoading } = useQuery({
-    queryKey: ["leads", filter],
-    queryFn: () => listLeads(filter),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => updateLeadStatus(id, status),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Status updated");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to update"),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteLead(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["leads"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Lead deleted");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete"),
+  const { data: reports, isLoading } = useQuery({
+    queryKey: ["my-concern-reports", filter],
+    queryFn: () => listMyConcernReports(filter),
   });
 
   return (
@@ -53,16 +75,16 @@ export function LeadsTab() {
             Review your submitted concerns and check their current status.
           </p>
         </div>
-        <div className="flex gap-1 bg-muted rounded-lg p-1">
-          {STATUSES.map((s) => (
+        <div className="flex gap-1 bg-muted rounded-lg p-1 flex-wrap">
+          {STATUS_FILTERS.map((status) => (
             <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors capitalize ${
-                filter === s ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              key={status.value}
+              onClick={() => setFilter(status.value)}
+              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                filter === status.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {s}
+              {status.label}
             </button>
           ))}
         </div>
@@ -71,64 +93,16 @@ export function LeadsTab() {
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
-        ) : (leads ?? []).length === 0 ? (
-          <div className="p-12 text-center text-[13px] text-muted-foreground">
-            No reports yet.
+        ) : (reports ?? []).length === 0 ? (
+          <div className="px-5 py-16 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <ClipboardList className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="mt-4 text-[13px] text-muted-foreground">No reports found for this filter.</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {(leads ?? []).map((l) => {
-              const style = STATUS_STYLES[l.status] ?? STATUS_STYLES.new;
-              return (
-                <div key={l.id} className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <p className="font-semibold text-foreground">{l.name}</p>
-                        <select
-                          value={l.status}
-                          onChange={(e) => updateMutation.mutate({ id: l.id, status: e.target.value })}
-                          className={`text-[11px] font-medium rounded-full px-2.5 py-0.5 border-0 focus:ring-1 focus:ring-primary cursor-pointer ${style}`}
-                        >
-                          <option value="new">new</option>
-                          <option value="contacted">contacted</option>
-                          <option value="booked">booked</option>
-                          <option value="closed">closed</option>
-                        </select>
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
-                        <a href={`mailto:${l.email}`} className="inline-flex items-center gap-1 hover:text-primary">
-                          <Mail className="w-3 h-3" /> {l.email}
-                        </a>
-                        {l.phone && (
-                          <a href={`tel:${l.phone}`} className="inline-flex items-center gap-1 hover:text-primary">
-                            <Phone className="w-3 h-3" /> {l.phone}
-                          </a>
-                        )}
-                        {l.service_interest && (
-                          <span className="px-2 py-0.5 bg-muted rounded">Interested: {l.service_interest}</span>
-                        )}
-                      </div>
-                      {l.message && (
-                        <p className="mt-2 text-[13px] text-foreground/80 whitespace-pre-wrap">{l.message}</p>
-                      )}
-                      <p className="mt-2 text-[11px] text-muted-foreground">
-                        via {l.source} · {new Date(l.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete lead from ${l.name}?`)) deleteMutation.mutate(l.id);
-                      }}
-                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {(reports ?? []).map((report) => <ReportCard key={report.id} report={report} />)}
           </div>
         )}
       </div>

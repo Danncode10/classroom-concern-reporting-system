@@ -1,53 +1,117 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Mail, Phone, Car, Trash2, Calendar } from "lucide-react";
-import { listBookings, updateBooking, deleteBooking } from "@/services/bookings";
+import { ArrowDown, ArrowUp, Loader2, MapPin, MessageSquareText } from "lucide-react";
+import {
+  listCommunityConcerns,
+  setConcernVote,
+  type CommunityConcern,
+  type ConcernStatus,
+} from "@/services/concerns";
 
-const STATUSES = ["all", "pending", "confirmed", "completed", "cancelled"] as const;
+const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "submitted", label: "Submitted" },
+  { value: "in_review", label: "In review" },
+  { value: "in_progress", label: "In progress" },
+  { value: "resolved", label: "Resolved" },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: "bg-amber-500/10 text-amber-500",
-  confirmed: "bg-blue-500/10 text-blue-500",
-  completed: "bg-emerald-500/10 text-emerald-500",
-  cancelled: "bg-rose-500/10 text-rose-500",
+const STATUS_STYLES: Record<ConcernStatus, string> = {
+  submitted: "bg-amber-500/10 text-amber-600",
+  in_review: "bg-blue-500/10 text-blue-600",
+  in_progress: "bg-primary/10 text-primary",
+  resolved: "bg-emerald-500/10 text-emerald-600",
+  rejected: "bg-destructive/10 text-destructive",
 };
 
-const PAYMENT_STYLES: Record<string, string> = {
-  unpaid: "bg-rose-500/10 text-rose-500",
-  deposit: "bg-amber-500/10 text-amber-500",
-  paid: "bg-emerald-500/10 text-emerald-500",
-};
+function formatStatus(status: ConcernStatus) {
+  return status.replace(/_/g, " ");
+}
+
+function CommunityCard({
+  concern,
+  onVote,
+  isVoting,
+}: {
+  concern: CommunityConcern;
+  onVote: (reportId: string, value: -1 | 1) => void;
+  isVoting: boolean;
+}) {
+  return (
+    <article className="px-5 py-4">
+      <div className="flex gap-4">
+        <div className="flex w-12 shrink-0 flex-col items-center gap-1">
+          <button
+            onClick={() => onVote(concern.id, 1)}
+            disabled={isVoting}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+              concern.userVote === 1
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-primary"
+            }`}
+            title="Upvote"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+          <p className="text-lg font-semibold text-foreground tabular-nums">{concern.vote_score}</p>
+          <button
+            onClick={() => onVote(concern.id, -1)}
+            disabled={isVoting}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+              concern.userVote === -1
+                ? "border-destructive bg-destructive/10 text-destructive"
+                : "border-border text-muted-foreground hover:text-destructive"
+            }`}
+            title="Downvote"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-foreground">{concern.title}</h3>
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${STATUS_STYLES[concern.status]}`}>
+              {formatStatus(concern.status)}
+            </span>
+          </div>
+          <p className="mt-2 text-[13px] text-muted-foreground whitespace-pre-wrap">{concern.description}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+            <span>{concern.authorName}</span>
+            <span className="capitalize">{concern.category}</span>
+            {concern.location && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {concern.location}
+              </span>
+            )}
+            <span>{new Date(concern.created_at).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export function BookingsTab() {
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<ConcernStatus | "all">("all");
   const qc = useQueryClient();
 
-  const { data: bookings, isLoading } = useQuery({
-    queryKey: ["bookings", filter],
-    queryFn: () => listBookings(filter),
+  const { data: concerns, isLoading } = useQuery({
+    queryKey: ["community-concerns", filter],
+    queryFn: () => listCommunityConcerns(filter),
   });
 
-  const updateMut = useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Record<string, unknown> }) => updateBooking(id, updates),
+  const voteMutation = useMutation({
+    mutationFn: ({ reportId, value }: { reportId: string; value: -1 | 1 }) => setConcernVote(reportId, value),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["bookings"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Booking updated");
+      qc.invalidateQueries({ queryKey: ["community-concerns"] });
+      qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Update failed"),
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: (id: string) => deleteBooking(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["bookings"] });
-      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      toast.success("Booking deleted");
-    },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Vote failed"),
   });
 
   return (
@@ -56,19 +120,19 @@ export function BookingsTab() {
         <div>
           <h2 className="text-2xl font-semibold text-foreground tracking-tight">Community</h2>
           <p className="mt-1 text-[14px] text-muted-foreground">
-            Browse visible classroom concerns and support the ones that need attention.
+            Vote on visible classroom concerns so urgent reports are easier to notice.
           </p>
         </div>
         <div className="flex gap-1 bg-muted rounded-lg p-1 flex-wrap">
-          {STATUSES.map((s) => (
+          {STATUS_FILTERS.map((status) => (
             <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors capitalize ${
-                filter === s ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              key={status.value}
+              onClick={() => setFilter(status.value)}
+              className={`px-3 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                filter === status.value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {s}
+              {status.label}
             </button>
           ))}
         </div>
@@ -77,88 +141,23 @@ export function BookingsTab() {
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
-        ) : (bookings ?? []).length === 0 ? (
-          <div className="p-12 text-center text-[13px] text-muted-foreground">
-            No community reports yet.
+        ) : (concerns ?? []).length === 0 ? (
+          <div className="px-5 py-16 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <MessageSquareText className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="mt-4 text-[13px] text-muted-foreground">No community reports found for this filter.</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {(bookings ?? []).map((b) => {
-              const statusStyle = STATUS_STYLES[b.status] ?? STATUS_STYLES.pending;
-              const payStyle = PAYMENT_STYLES[b.payment_status] ?? PAYMENT_STYLES.unpaid;
-              const vehicle = [b.vehicle_year, b.vehicle_make, b.vehicle_model].filter(Boolean).join(" ");
-
-              return (
-                <div key={b.id} className="px-5 py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <p className="font-semibold text-foreground">{b.customer_name}</p>
-                        <span className="text-[12px] text-primary font-medium">{b.service_name}</span>
-                        <select
-                          value={b.status}
-                          onChange={(e) => updateMut.mutate({ id: b.id, updates: { status: e.target.value } })}
-                          className={`text-[11px] font-medium rounded-full px-2.5 py-0.5 border-0 focus:ring-1 focus:ring-primary cursor-pointer ${statusStyle}`}
-                        >
-                          <option value="pending">pending</option>
-                          <option value="confirmed">confirmed</option>
-                          <option value="completed">completed</option>
-                          <option value="cancelled">cancelled</option>
-                        </select>
-                        <select
-                          value={b.payment_status}
-                          onChange={(e) => updateMut.mutate({ id: b.id, updates: { payment_status: e.target.value } })}
-                          className={`text-[11px] font-medium rounded-full px-2.5 py-0.5 border-0 focus:ring-1 focus:ring-primary cursor-pointer ${payStyle}`}
-                        >
-                          <option value="unpaid">unpaid</option>
-                          <option value="deposit">deposit</option>
-                          <option value="paid">paid</option>
-                        </select>
-                      </div>
-
-                      <div className="mt-1 flex flex-wrap gap-3 text-[12px] text-muted-foreground">
-                        <a href={`mailto:${b.customer_email}`} className="inline-flex items-center gap-1 hover:text-primary">
-                          <Mail className="w-3 h-3" /> {b.customer_email}
-                        </a>
-                        {b.customer_phone && (
-                          <a href={`tel:${b.customer_phone}`} className="inline-flex items-center gap-1 hover:text-primary">
-                            <Phone className="w-3 h-3" /> {b.customer_phone}
-                          </a>
-                        )}
-                        {vehicle && (
-                          <span className="inline-flex items-center gap-1">
-                            <Car className="w-3 h-3" /> {vehicle}
-                          </span>
-                        )}
-                        {(b.confirmed_date || b.preferred_date) && (
-                          <span className="inline-flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {b.confirmed_date ?? b.preferred_date}
-                            {b.confirmed_time && ` @ ${b.confirmed_time}`}
-                          </span>
-                        )}
-                        {b.price_quoted && (
-                          <span className="px-2 py-0.5 bg-muted rounded">Quote: ${b.price_quoted}</span>
-                        )}
-                      </div>
-
-                      {b.notes && <p className="mt-2 text-[13px] text-foreground/80 whitespace-pre-wrap">{b.notes}</p>}
-                      <p className="mt-2 text-[11px] text-muted-foreground">
-                        via {b.source} · {new Date(b.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete booking from ${b.customer_name}?`)) deleteMut.mutate(b.id);
-                      }}
-                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+            {(concerns ?? []).map((concern) => (
+              <CommunityCard
+                key={concern.id}
+                concern={concern}
+                isVoting={voteMutation.isPending}
+                onVote={(reportId, value) => voteMutation.mutate({ reportId, value })}
+              />
+            ))}
           </div>
         )}
       </div>
