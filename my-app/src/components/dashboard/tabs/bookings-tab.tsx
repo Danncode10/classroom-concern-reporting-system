@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { type InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, MapPin, MessageSquareText, ThumbsDown, ThumbsUp } from "lucide-react";
 import {
@@ -17,6 +17,9 @@ const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
   { value: "in_progress", label: "In progress" },
   { value: "resolved", label: "Resolved" },
 ];
+
+const COMMUNITY_PAGE_SIZE = 10;
+type CommunityPages = InfiniteData<CommunityConcern[], number>;
 
 const STATUS_STYLES: Record<ConcernStatus, string> = {
   submitted: "bg-amber-500/10 text-amber-600",
@@ -64,6 +67,10 @@ function CommunityCard({
       <div className="mt-4">
         <h3 className="text-[15px] font-semibold text-foreground">{concern.title}</h3>
         <p className="mt-2 whitespace-pre-wrap text-[13px] leading-6 text-muted-foreground">{concern.description}</p>
+        {concern.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element -- User photos use runtime Storage URLs.
+          <img src={concern.image_url} alt={`Attached photo for ${concern.title}`} className="mt-4 max-h-96 w-full rounded-xl border border-border object-cover" />
+        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
@@ -108,19 +115,67 @@ function CommunityCard({
 export function BookingsTab() {
   const [filter, setFilter] = useState<ConcernStatus | "all">("all");
   const qc = useQueryClient();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const { data: concerns, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ["community-concerns", filter],
-    queryFn: () => listCommunityConcerns(filter),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => listCommunityConcerns({ status: filter, offset: pageParam, limit: COMMUNITY_PAGE_SIZE }),
+    getNextPageParam: (lastPage, allPages) => lastPage.length === COMMUNITY_PAGE_SIZE
+      ? allPages.length * COMMUNITY_PAGE_SIZE
+      : undefined,
   });
+
+  const concerns = data?.pages.flat() ?? [];
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) fetchNextPage(); },
+      { rootMargin: "240px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const voteMutation = useMutation({
     mutationFn: ({ reportId, value }: { reportId: string; value: -1 | 1 }) => setConcernVote(reportId, value),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["community-concerns"] });
-      qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
+    onMutate: async ({ reportId, value }) => {
+      await qc.cancelQueries({ queryKey: ["community-concerns"] });
+      const previous = qc.getQueriesData<CommunityPages>({ queryKey: ["community-concerns"] });
+
+      previous.forEach(([queryKey]) => {
+        qc.setQueryData<CommunityPages>(queryKey, (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            pages: current.pages.map((page) => page.map((concern) => {
+              if (concern.id !== reportId) return concern;
+              const scoreChange = concern.userVote === value ? -value : value - (concern.userVote ?? 0);
+              return { ...concern, userVote: concern.userVote === value ? null : value, vote_score: concern.vote_score + scoreChange };
+            })),
+          };
+        });
+      });
+
+      return { previous };
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Vote failed"),
+    onError: (error, _variables, context) => {
+      context?.previous.forEach(([queryKey, cachedData]) => qc.setQueryData(queryKey, cachedData));
+      toast.error(error instanceof Error ? error.message : "Vote failed");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    },
   });
 
   return (
@@ -150,7 +205,7 @@ export function BookingsTab() {
       <div className="mx-auto max-w-3xl space-y-3">
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
-        ) : (concerns ?? []).length === 0 ? (
+        ) : concerns.length === 0 ? (
           <div className="rounded-xl border border-border bg-card px-5 py-16 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <MessageSquareText className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
@@ -159,14 +214,18 @@ export function BookingsTab() {
           </div>
         ) : (
           <div className="space-y-3">
-            {(concerns ?? []).map((concern) => (
+            {concerns.map((concern) => (
               <CommunityCard
                 key={concern.id}
                 concern={concern}
-                isVoting={voteMutation.isPending}
+                isVoting={voteMutation.isPending && voteMutation.variables?.reportId === concern.id}
                 onVote={(reportId, value) => voteMutation.mutate({ reportId, value })}
               />
             ))}
+            <div ref={loadMoreRef} className="flex h-14 items-center justify-center text-[12px] text-muted-foreground">
+              {isFetchingNextPage && <Loader2 className="h-4 w-4 animate-spin" />}
+              {!hasNextPage && concerns.length > 0 && "You have reached the end of the community feed."}
+            </div>
           </div>
         )}
       </div>

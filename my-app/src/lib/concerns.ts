@@ -7,13 +7,19 @@ export type ConcernVote = Tables<"concern_votes">;
 
 export type ConcernReportInput = Pick<
   TablesInsert<"concern_reports">,
-  "title" | "description" | "category" | "location"
+  "title" | "description" | "category" | "location" | "image_url" | "image_path"
 >;
 
 export type CommunityConcern = ConcernReport & {
   authorName: string;
   userVote: number | null;
 };
+
+export const CONCERN_LIMITS = {
+  title: 100,
+  location: 120,
+  description: 800,
+} as const;
 
 export const CONCERN_CATEGORIES: Array<{ value: ConcernCategory; label: string }> = [
   { value: "equipment", label: "Equipment" },

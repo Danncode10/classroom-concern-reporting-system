@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Send, CheckCircle2 } from "lucide-react";
+import { ImagePlus, Loader2, Send, CheckCircle2, X } from "lucide-react";
 import {
   createConcernReport,
 } from "@/services/concerns";
-import { CONCERN_CATEGORIES, type ConcernCategory, type ConcernReportInput } from "@/lib/concerns";
+import { CONCERN_CATEGORIES, CONCERN_LIMITS, type ConcernCategory, type ConcernReportInput } from "@/lib/concerns";
+import { deleteConcernImage, uploadConcernImage, validateConcernImage } from "@/lib/concern-image-upload";
 
-const initialForm: ConcernReportInput = {
+type ReportForm = Omit<ConcernReportInput, "image_url" | "image_path">;
+
+const initialForm: ReportForm = {
   title: "",
   description: "",
   location: "",
@@ -17,13 +20,33 @@ const initialForm: ConcernReportInput = {
 };
 
 export function ServicesTab() {
-  const [form, setForm] = useState<ConcernReportInput>(initialForm);
+  const [form, setForm] = useState<ReportForm>(initialForm);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: createConcernReport,
+    mutationFn: async () => {
+      let uploadedImage: { url: string; path: string } | null = null;
+      try {
+        if (imageFile) uploadedImage = await uploadConcernImage(imageFile);
+        return await createConcernReport({
+          ...form,
+          image_url: uploadedImage?.url ?? null,
+          image_path: uploadedImage?.path ?? null,
+        });
+      } catch (error) {
+        if (uploadedImage) await deleteConcernImage(uploadedImage.path);
+        throw error;
+      }
+    },
     onSuccess: () => {
       setForm(initialForm);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      setImageFile(null);
+      setImagePreview(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
       qc.invalidateQueries({ queryKey: ["my-concern-reports"] });
       qc.invalidateQueries({ queryKey: ["community-concerns"] });
       toast.success("Report submitted");
@@ -31,8 +54,27 @@ export function ServicesTab() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Report failed"),
   });
 
-  const updateForm = (updates: Partial<ConcernReportInput>) => {
+  const updateForm = (updates: Partial<ReportForm>) => {
     setForm((current) => ({ ...current, ...updates }));
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
+
+  const selectImage = (file: File | undefined) => {
+    if (!file) return;
+    const validationError = validateConcernImage(file);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   return (
@@ -47,7 +89,7 @@ export function ServicesTab() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          mutation.mutate(form);
+          mutation.mutate();
         }}
         className="bg-card border border-border rounded-2xl overflow-hidden"
       >
@@ -62,9 +104,33 @@ export function ServicesTab() {
                 value={form.title}
                 onChange={(event) => updateForm({ title: event.target.value })}
                 placeholder="Broken ceiling fan in Room 204"
+                maxLength={CONCERN_LIMITS.title}
                 className="w-full h-11 rounded-xl border border-input bg-background px-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
                 required
               />
+              <p className="text-right text-[11px] text-muted-foreground">{form.title.length}/{CONCERN_LIMITS.title}</p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="concern-image" className="text-[12px] font-semibold text-foreground">Photo <span className="font-normal text-muted-foreground">(optional)</span></label>
+                {imagePreview && (
+                  <button type="button" onClick={clearImage} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-destructive">
+                    <X className="h-3.5 w-3.5" /> Remove
+                  </button>
+                )}
+              </div>
+              {imagePreview ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Browser previews use an in-memory object URL.
+                <img src={imagePreview} alt="Selected concern" className="max-h-64 w-full rounded-xl border border-border object-cover" />
+              ) : (
+                <label htmlFor="concern-image" className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center hover:bg-muted/40">
+                  <ImagePlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                  <span className="text-[12px] font-medium text-foreground">Add a photo</span>
+                  <span className="text-[11px] text-muted-foreground">JPEG, PNG, or WebP. Images are compressed before upload.</span>
+                </label>
+              )}
+              <input ref={imageInputRef} id="concern-image" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => selectImage(event.target.files?.[0])} />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -95,8 +161,10 @@ export function ServicesTab() {
                   value={form.location ?? ""}
                   onChange={(event) => updateForm({ location: event.target.value })}
                   placeholder="Building, room, or area"
+                  maxLength={CONCERN_LIMITS.location}
                   className="w-full h-11 rounded-xl border border-input bg-background px-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
                 />
+                <p className="text-right text-[11px] text-muted-foreground">{form.location?.length ?? 0}/{CONCERN_LIMITS.location}</p>
               </div>
             </div>
 
@@ -110,9 +178,11 @@ export function ServicesTab() {
                 onChange={(event) => updateForm({ description: event.target.value })}
                 placeholder="Describe what happened, where it is, and why it needs attention."
                 rows={7}
+                maxLength={CONCERN_LIMITS.description}
                 className="w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-ring"
                 required
               />
+              <p className="text-right text-[11px] text-muted-foreground">{form.description.length}/{CONCERN_LIMITS.description}</p>
             </div>
           </div>
 

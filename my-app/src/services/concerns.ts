@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import type { CommunityConcern, ConcernReportInput, ConcernStatus, ConcernVote } from "@/lib/concerns";
+import { CONCERN_LIMITS, type CommunityConcern, type ConcernReportInput, type ConcernStatus, type ConcernVote } from "@/lib/concerns";
 
 async function requireUserId() {
   const supabase = await createClient();
@@ -17,9 +17,14 @@ export async function createConcernReport(input: ConcernReportInput) {
   const title = input.title.trim();
   const description = input.description.trim();
   const location = input.location?.trim() || null;
+  const imageUrl = input.image_url?.trim() || null;
+  const imagePath = input.image_path?.trim() || null;
 
   if (title.length < 5) throw new Error("Title must be at least 5 characters.");
   if (description.length < 10) throw new Error("Description must be at least 10 characters.");
+  if (title.length > CONCERN_LIMITS.title) throw new Error(`Title must be ${CONCERN_LIMITS.title} characters or fewer.`);
+  if (location && location.length > CONCERN_LIMITS.location) throw new Error(`Location must be ${CONCERN_LIMITS.location} characters or fewer.`);
+  if (description.length > CONCERN_LIMITS.description) throw new Error(`Description must be ${CONCERN_LIMITS.description} characters or fewer.`);
 
   const { data, error } = await supabase
     .from("concern_reports")
@@ -29,6 +34,8 @@ export async function createConcernReport(input: ConcernReportInput) {
       description,
       location,
       category: input.category,
+      image_url: imageUrl,
+      image_path: imagePath,
     })
     .select("*")
     .single();
@@ -56,7 +63,15 @@ export async function listMyConcernReports(status: ConcernStatus | "all" = "all"
   return data ?? [];
 }
 
-export async function listCommunityConcerns(status: ConcernStatus | "all" = "all") {
+export async function listCommunityConcerns({
+  status = "all",
+  offset = 0,
+  limit = 10,
+}: {
+  status?: ConcernStatus | "all";
+  offset?: number;
+  limit?: number;
+} = {}) {
   const { supabase, userId } = await requireUserId();
 
   let query = supabase
@@ -65,7 +80,7 @@ export async function listCommunityConcerns(status: ConcernStatus | "all" = "all
     .eq("is_removed", false)
     .order("vote_score", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(offset, offset + Math.min(limit, 25) - 1);
 
   if (status !== "all") {
     query = query.eq("status", status);

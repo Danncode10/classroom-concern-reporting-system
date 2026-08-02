@@ -39,6 +39,10 @@ function ReportCard({ report }: { report: ConcernReport }) {
             </span>
           </div>
           <p className="mt-2 text-[13px] text-muted-foreground whitespace-pre-wrap">{report.description}</p>
+          {report.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element -- User photos use runtime Storage URLs.
+            <img src={report.image_url} alt={`Attached photo for ${report.title}`} className="mt-4 max-h-80 w-full rounded-xl border border-border object-cover" />
+          )}
           <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
             <span className="capitalize">{report.category}</span>
             {report.location && (
