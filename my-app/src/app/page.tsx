@@ -56,7 +56,7 @@ export default async function Home() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-32">
           <div className="text-center mb-16">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.02] px-3 py-1 text-[10px] font-medium text-foreground/70 uppercase tracking-[0.2em]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1 text-[10px] font-medium text-foreground/70 uppercase tracking-[0.2em]">
               MVP features
             </span>
             <h2 className="mt-6 text-4xl sm:text-5xl font-semibold text-foreground tracking-[-0.02em]">
@@ -74,9 +74,9 @@ export default async function Home() {
               return (
                 <div
                   key={feature.title}
-                  className="rounded-3xl border border-white/[0.06] bg-card p-7 inner-highlight"
+                  className="rounded-3xl border border-border bg-card p-7 inner-highlight"
                 >
-                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.04]">
+                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/10">
                     <Icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   </div>
                   <h3 className="text-base font-semibold text-foreground">

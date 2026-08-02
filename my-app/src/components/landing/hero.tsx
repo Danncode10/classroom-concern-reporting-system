@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, MouseEvent } from "react";
+import { useRef, useState, MouseEvent } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { Typewriter } from "./typewriter";
-import { WaterParticles } from "./water-particles";
 
 interface HeroProps {
   isAuthed: boolean;
@@ -25,48 +24,13 @@ const HERO_TYPING_SPEED = 70; // ~3s total for 42-char headline
 export function Hero({ isAuthed }: HeroProps) {
   const [typingDone, setTypingDone] = useState(false);
 
-  // Blur the fixed navbar directly — CSS `body.intro-active header` can be
-  // unreliable for fixed+z-indexed elements; inline styles guarantee it.
-  const blurHeader = () => {
-    const el = document.querySelector<HTMLElement>("header");
-    if (!el) return;
-    el.style.transition =
-      "filter 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
-    el.style.filter = "blur(8px)";
-    el.style.opacity = "0.25";
-    el.style.pointerEvents = "none";
-  };
-  const clearHeader = () => {
-    const el = document.querySelector<HTMLElement>("header");
-    if (!el) return;
-    el.style.filter = "";
-    el.style.opacity = "";
-    el.style.pointerEvents = "";
-  };
-
-  useEffect(() => {
-    document.body.classList.add("intro-active");
-    blurHeader();
-    return () => {
-      document.body.classList.remove("intro-active");
-      clearHeader();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typingDone) {
-      document.body.classList.remove("intro-active");
-      clearHeader();
-    }
-  }, [typingDone]);
-
   return (
     <section
       id="home"
       className="relative overflow-hidden pt-16 pb-32 md:pt-24 md:pb-44"
       style={{
         background:
-          "radial-gradient(ellipse 800px 600px at 80% 0%, rgba(124,92,255,0.16), transparent 60%), var(--color-background)",
+          "radial-gradient(ellipse 800px 600px at 80% 0%, rgba(11,122,42,0.13), transparent 60%), radial-gradient(ellipse 700px 500px at 10% 10%, rgba(244,196,48,0.18), transparent 55%), #F7FAF2",
       }}
     >
       {/* Static dot grid */}
@@ -78,10 +42,6 @@ export function Hero({ isAuthed }: HeroProps) {
         aria-hidden
         className="pointer-events-none absolute inset-0 grid-fade-overlay"
       />
-
-      {/* Water-particle field — visible and moving immediately so it's
-          present during the typewriter reveal, not only after it */}
-      <WaterParticles active={true} count={140} />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Microcopy link — blurred while typing, clears after */}
@@ -160,7 +120,7 @@ export function Hero({ isAuthed }: HeroProps) {
             href="/#features"
             className="group inline-flex items-center gap-2 text-[14px] font-medium text-foreground/90 hover:text-foreground transition-colors"
           >
-            <span className="border-b border-white/[0.15] group-hover:border-white/[0.4] transition-colors pb-0.5">
+            <span className="border-b border-border group-hover:border-primary transition-colors pb-0.5">
               See what you can report
             </span>
             <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -222,16 +182,16 @@ export function Hero({ isAuthed }: HeroProps) {
           style={{ perspective: "1500px" }}
         >
           <TiltCard>
-            <div className="relative rounded-[calc(2rem-0.375rem)] bg-card overflow-hidden border border-white/[0.04] inner-highlight">
+            <div className="relative rounded-[calc(2rem-0.375rem)] bg-card overflow-hidden border border-border inner-highlight">
               {/* Top bar */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.04] bg-background/40">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/60">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-white/10" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-destructive/70" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-accent" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-primary/70" />
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white/[0.03] border border-white/[0.04]">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-border">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                   <span className="text-[10px] font-mono text-muted-foreground">
                     {siteConfig.name}/dashboard
                   </span>
@@ -248,7 +208,7 @@ export function Hero({ isAuthed }: HeroProps) {
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] transition-colors duration-200 ${
                         i === 0
                           ? "bg-primary/10 border border-primary/20 text-primary"
-                          : "text-muted-foreground hover:bg-white/[0.02]"
+                          : "text-muted-foreground hover:bg-muted"
                       }`}
                     >
                       <Icon className="h-3 w-3" strokeWidth={1.5} />
@@ -268,7 +228,7 @@ export function Hero({ isAuthed }: HeroProps) {
                     ].map((s) => (
                       <div
                         key={s.label}
-                        className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]"
+                        className="p-3 rounded-xl bg-muted/55 border border-border"
                       >
                         <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground">
                           {s.label}
@@ -276,14 +236,14 @@ export function Hero({ isAuthed }: HeroProps) {
                         <p className="mt-1.5 text-base font-semibold text-foreground tabular-nums">
                           {s.val}
                         </p>
-                        <p className="mt-0.5 text-[9px] text-emerald-400 font-mono">
+                        <p className="mt-0.5 text-[9px] text-primary font-mono">
                           {s.delta}
                         </p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="relative h-32 rounded-xl bg-white/[0.02] border border-white/[0.04] overflow-hidden p-3">
+                  <div className="relative h-32 rounded-xl bg-muted/55 border border-border overflow-hidden p-3">
                     <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground mb-2">
                       Reports by visibility · this week
                     </p>
@@ -308,10 +268,10 @@ export function Hero({ isAuthed }: HeroProps) {
                     ].map((row, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.015] border border-white/[0.03]"
+                        className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-border"
                       >
                         <div className="flex items-center gap-2.5">
-                          <span className="px-1.5 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span className="px-1.5 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
                             live
                           </span>
                           <div>
@@ -378,7 +338,7 @@ function MagneticCTA({ href, children }: { href: string; children: React.ReactNo
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       style={{ willChange: "transform" }}
-      className="group inline-flex items-center gap-2 pl-6 pr-2 py-2 text-sm font-medium rounded-full bg-foreground text-background active:scale-[0.97] transition-transform duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_4px_20px_rgba(124,92,255,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]"
+      className="group inline-flex items-center gap-2 pl-6 pr-2 py-2 text-sm font-medium rounded-full bg-foreground text-background active:scale-[0.97] transition-transform duration-[400ms] ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_4px_20px_rgba(11,122,42,0.22),inset_0_1px_0_rgba(255,255,255,0.35)]"
     >
       {children}
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-background/10 group-hover:bg-background/20 transition-colors duration-200">
@@ -431,7 +391,7 @@ function TiltCard({ children }: { children: React.ReactNode }) {
         transformStyle: "preserve-3d",
         transition: "transform 600ms cubic-bezier(0.23, 1, 0.32, 1)",
       }}
-      className="relative p-1.5 rounded-[2rem] bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]"
+      className="relative p-1.5 rounded-[2rem] bg-gradient-to-b from-white to-muted border border-border shadow-[0_12px_40px_-12px_rgba(11,122,42,0.25)]"
     >
       {children}
     </div>

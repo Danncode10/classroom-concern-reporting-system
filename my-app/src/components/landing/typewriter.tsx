@@ -120,7 +120,7 @@ export function Typewriter({
               "color 0.9s cubic-bezier(0.16, 1, 0.3, 1), text-shadow 0.9s cubic-bezier(0.16, 1, 0.3, 1)",
             color: highlightActive ? "var(--color-primary)" : "inherit",
             textShadow: highlightActive
-              ? "0 0 32px rgba(124,92,255,0.45)"
+              ? "0 0 24px rgba(11,122,42,0.20)"
               : "0 0 0px transparent",
           }}
         >

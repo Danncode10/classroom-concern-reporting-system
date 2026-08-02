@@ -1,42 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand — refined purple with a touch more vibrance */
-  --color-primary: #7C5CFF;
+  /* Brand — NVSU-inspired green with red/yellow support accents */
+  --color-primary: #0B7A2A;
   --color-primary-foreground: #ffffff;
 
-  /* Page — deeper OLED-black for Linear/Vercel feel */
-  --color-background: #050507;
-  --color-foreground: #EEEAFF;
+  /* Page */
+  --color-background: #F7FAF2;
+  --color-foreground: #132016;
 
-  /* Cards / panels — slightly lifted from background */
-  --color-card: #0C0C14;
-  --color-card-foreground: #EEEAFF;
+  /* Cards / panels */
+  --color-card: #FFFFFF;
+  --color-card-foreground: #132016;
 
   /* Muted (subtle backgrounds + secondary text) */
-  --color-muted: #14141F;
-  --color-muted-foreground: #8983A8;
+  --color-muted: #EAF3E3;
+  --color-muted-foreground: #586B54;
 
   /* Accent (hover / highlight states) */
-  --color-accent: #1A1330;
-  --color-accent-foreground: #EEEAFF;
+  --color-accent: #FFF3C2;
+  --color-accent-foreground: #132016;
 
   /* Secondary chips / badges */
-  --color-secondary: #14141F;
-  --color-secondary-foreground: #EEEAFF;
+  --color-secondary: #F1F7EB;
+  --color-secondary-foreground: #132016;
 
   /* Destructive / error */
-  --color-destructive: #ef4444;
+  --color-destructive: #C62828;
   --color-destructive-foreground: #ffffff;
 
   /* Popover / dropdown */
-  --color-popover: #0C0C14;
-  --color-popover-foreground: #EEEAFF;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #132016;
 
   /* Form elements — hairline borders */
-  --color-input: #25223D;
-  --color-ring: #7C5CFF;
-  --color-border: #1F1C33;
+  --color-input: #CADCC0;
+  --color-ring: #0B7A2A;
+  --color-border: #D7E4CF;
 
   /* Radius */
   --radius-5xl: 3rem;
@@ -53,6 +53,30 @@
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* Keep the palette explicit outside Tailwind utilities too. Some landing
+   components use these variables directly in inline backgrounds. */
+:root {
+  --color-primary: #0B7A2A;
+  --color-primary-foreground: #FFFFFF;
+  --color-background: #F7FAF2;
+  --color-foreground: #132016;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #132016;
+  --color-muted: #EAF3E3;
+  --color-muted-foreground: #40533F;
+  --color-accent: #FFF3C2;
+  --color-accent-foreground: #132016;
+  --color-secondary: #F1F7EB;
+  --color-secondary-foreground: #132016;
+  --color-destructive: #C62828;
+  --color-destructive-foreground: #FFFFFF;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #132016;
+  --color-input: #CADCC0;
+  --color-ring: #0B7A2A;
+  --color-border: #D7E4CF;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -60,6 +84,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+    background-color: #F7FAF2;
+    color: #132016;
   }
   h1, h2, h3, h4 {
     text-wrap: balance;
@@ -78,19 +104,19 @@
   /* Static dot grid background — no animation */
   .bg-grid {
     background-image:
-      radial-gradient(circle at center, rgba(124, 92, 255, 0.18) 1px, transparent 1px);
+      radial-gradient(circle at center, rgba(11, 122, 42, 0.14) 1px, transparent 1px);
     background-size: 32px 32px;
     background-position: 0 0;
   }
   .bg-grid-sm {
     background-image:
-      radial-gradient(circle at center, rgba(238, 234, 255, 0.06) 1px, transparent 1px);
+      radial-gradient(circle at center, rgba(11, 122, 42, 0.08) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
   /* Static gradient text — no infinite animation (perf) */
   .gradient-text-primary {
-    background: linear-gradient(135deg, #B4A6FF 0%, #7C5CFF 60%, #B4A6FF 100%);
+    background: linear-gradient(135deg, #C62828 0%, #0B7A2A 55%, #F4C430 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -100,8 +126,8 @@
   /* Inner highlight — for double-bezel cards (paint-only, very cheap) */
   .inner-highlight {
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.06),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      inset 0 1px 1px rgba(255, 255, 255, 0.8),
+      inset 0 0 0 1px rgba(19, 32, 22, 0.04);
   }
 
   /* Radial fade mask — for grid edges (small elements only) */
@@ -159,22 +185,6 @@
 /* Intro phase — the body gets .intro-active while the hero typewriter
    is running. Lock scroll + blur all non-hero sections + footer so the
    user's attention is focused on the typing reveal. */
-body.intro-active {
-  overflow: hidden;
-}
-body section:not(#home),
-body footer,
-body header {
-  transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-}
-body.intro-active section:not(#home),
-body.intro-active footer,
-body.intro-active header {
-  filter: blur(8px);
-  opacity: 0.25;
-  pointer-events: none;
-}
 
 /* Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {

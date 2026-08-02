@@ -13,7 +13,7 @@ const STEPS = [
       "Use your school ID to sign in, choose the classroom location, select the concern type, and add a short description.",
     snippet: "Room 402 · Damaged fan",
     // Paint-only radial gradient (no filter:blur cost during scroll)
-    glow: "radial-gradient(ellipse at 70% 50%, rgba(124,92,255,0.25), transparent 60%)",
+    glow: "radial-gradient(ellipse at 70% 50%, rgba(11,122,42,0.18), transparent 60%)",
   },
   {
     step: "02",
@@ -22,7 +22,7 @@ const STEPS = [
     description:
       "Students and professors can view the community feed and vote on concerns that affect them too.",
     snippet: "18 votes · Pending",
-    glow: "radial-gradient(ellipse at 70% 50%, rgba(245,158,11,0.22), transparent 60%)",
+    glow: "radial-gradient(ellipse at 70% 50%, rgba(244,196,48,0.22), transparent 60%)",
   },
   {
     step: "03",
@@ -31,7 +31,7 @@ const STEPS = [
     description:
       "Admins review reports, update status, remove invalid posts, and keep users accountable.",
     snippet: "Status: In Progress",
-    glow: "radial-gradient(ellipse at 70% 50%, rgba(16,185,129,0.22), transparent 60%)",
+    glow: "radial-gradient(ellipse at 70% 50%, rgba(198,40,40,0.14), transparent 60%)",
   },
 ];
 
@@ -39,12 +39,12 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative bg-background isolate overflow-hidden border-t border-white/[0.04]"
+      className="relative bg-background isolate overflow-hidden border-t border-border"
     >
       {/* Vertical center rule */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/[0.06] to-transparent hidden lg:block"
+        className="pointer-events-none absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-border to-transparent hidden lg:block"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-32">
@@ -56,7 +56,7 @@ export function HowItWorks() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-24"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.02] px-3 py-1 text-[10px] font-medium text-foreground/70 uppercase tracking-[0.2em]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1 text-[10px] font-medium text-foreground/70 uppercase tracking-[0.2em]">
             How it works
           </span>
           <h2 className="mt-6 text-4xl sm:text-5xl font-semibold text-foreground tracking-[-0.02em]">
@@ -115,13 +115,13 @@ export function HowItWorks() {
                   />
 
                   {/* Outer bezel */}
-                  <div className="relative p-1.5 rounded-3xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/[0.06] shadow-[0_20px_80px_-20px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)]">
+                  <div className="relative p-1.5 rounded-3xl bg-gradient-to-b from-white to-muted border border-border shadow-[0_20px_80px_-20px_rgba(11,122,42,0.18)]">
                     {/* Inner core */}
                     <div className="rounded-[calc(1.5rem-0.375rem)] bg-card overflow-hidden inner-highlight">
                       {/* Chrome */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.04] bg-background/40">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/60">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/[0.04] border border-white/[0.06]">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 border border-primary/20">
                             <Icon
                               className="h-3.5 w-3.5 text-foreground/80"
                               strokeWidth={1.5}
@@ -146,7 +146,7 @@ export function HowItWorks() {
                           />
                         </div>
                         <div className="text-muted-foreground/60 text-[11px] pl-4">
-                          <span className="text-emerald-400">✓</span> ready in 1.4s
+                          <span className="text-primary">✓</span> ready in 1.4s
                         </div>
                       </div>
                     </div>

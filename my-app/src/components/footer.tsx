@@ -17,7 +17,7 @@ const workflowLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-white/[0.04] bg-background overflow-hidden">
+    <footer className="relative border-t border-border bg-background overflow-hidden">
       {/* Subtle background grid */}
       <div
         aria-hidden
@@ -33,9 +33,9 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-[#5B3FE0] shadow-[0_2px_8px_rgba(124,92,255,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]">
+              <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-[#117A34] to-[#C62828] shadow-[0_2px_8px_rgba(11,122,42,0.35),inset_0_1px_0_rgba(255,255,255,0.35)]">
                 <span className="text-[11px] font-black text-primary-foreground">
-                  D
+                  N
                 </span>
               </div>
               <span className="text-sm font-semibold tracking-tight text-foreground">
@@ -105,7 +105,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/[0.04] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[12px] text-muted-foreground/70 font-mono">
             © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
           </p>
@@ -114,7 +114,7 @@ export function Footer() {
               href={siteConfig.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:text-foreground hover:bg-white/[0.05] transition-all duration-300"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
             >
               <svg
                 className="h-4 w-4"

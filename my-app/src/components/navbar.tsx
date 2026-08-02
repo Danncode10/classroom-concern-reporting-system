@@ -59,19 +59,19 @@ export function Navbar({ user }: { user: User | null }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{ transform: "translateZ(0)" }}
-          className={`pointer-events-auto mt-4 flex items-center gap-1 rounded-full border border-white/[0.08] bg-[#0A0A12]/95 px-1.5 py-1.5 transition-shadow duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] inner-highlight ${
+          className={`pointer-events-auto mt-4 flex items-center gap-1 rounded-full border border-black/[0.08] bg-white/95 px-1.5 py-1.5 transition-shadow duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] inner-highlight ${
             scrolled
-              ? "shadow-[0_8px_32px_-8px_rgba(0,0,0,0.7),0_0_0_1px_rgba(124,92,255,0.1)]"
-              : "shadow-[0_4px_16px_-4px_rgba(0,0,0,0.5)]"
+              ? "shadow-[0_8px_32px_-8px_rgba(11,122,42,0.22),0_0_0_1px_rgba(11,122,42,0.1)]"
+              : "shadow-[0_4px_16px_-4px_rgba(11,122,42,0.18)]"
           }`}
         >
           {/* Logo */}
           <Link
             href="/#home"
-            className="group flex items-center gap-2 pl-3 pr-4 py-1.5 rounded-full hover:bg-white/[0.03] transition-colors"
+            className="group flex items-center gap-2 pl-3 pr-4 py-1.5 rounded-full hover:bg-muted transition-colors"
           >
-            <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-[#5B3FE0] shadow-[0_2px_8px_rgba(124,92,255,0.4),inset_0_1px_0_rgba(255,255,255,0.2)]">
-              <span className="text-[11px] font-black text-primary-foreground">D</span>
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary via-[#117A34] to-[#C62828] shadow-[0_2px_8px_rgba(11,122,42,0.35),inset_0_1px_0_rgba(255,255,255,0.35)]">
+              <span className="text-[11px] font-black text-primary-foreground">N</span>
             </div>
             <span className="text-sm font-semibold tracking-tight text-foreground">
               {siteConfig.name}
@@ -100,9 +100,9 @@ export function Navbar({ user }: { user: User | null }) {
           <div className="hidden md:flex items-center gap-1 pl-1">
             {user ? (
               <DropdownMenu>
-                <DropdownMenuTrigger className="group flex items-center gap-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.97] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] pl-1 pr-3 py-1 border border-white/[0.06]">
-                  <Avatar className="h-6 w-6 ring-1 ring-white/10">
-                    <AvatarFallback className="bg-gradient-to-br from-primary to-[#5B3FE0] text-primary-foreground font-black text-[9px]">
+                <DropdownMenuTrigger className="group flex items-center gap-2 rounded-full bg-muted hover:bg-secondary active:scale-[0.97] transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] pl-1 pr-3 py-1 border border-border">
+                  <Avatar className="h-6 w-6 ring-1 ring-primary/15">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-[#C62828] text-primary-foreground font-black text-[9px]">
                       {user.email?.[0].toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -112,7 +112,7 @@ export function Navbar({ user }: { user: User | null }) {
                   <ChevronDown className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="w-64 mt-3 rounded-2xl shadow-2xl border-white/[0.06] bg-card">
+                <DropdownMenuContent className="w-64 mt-3 rounded-2xl shadow-2xl border-border bg-card">
                   <DropdownMenuLabel>
                     <div className="flex flex-col gap-0.5 py-1">
                       <p className="text-[10px] font-bold text-foreground uppercase tracking-[0.15em] truncate">
@@ -150,7 +150,7 @@ export function Navbar({ user }: { user: User | null }) {
               <>
                 <a
                   href="/login"
-                  className="px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground rounded-full hover:text-foreground hover:bg-white/[0.03] transition-all duration-300"
+                  className="px-3.5 py-1.5 text-[13px] font-medium text-muted-foreground rounded-full hover:text-foreground hover:bg-muted transition-all duration-300"
                 >
                   Sign in
                 </a>
@@ -169,7 +169,7 @@ export function Navbar({ user }: { user: User | null }) {
 
           {/* Mobile toggle — morphing hamburger */}
           <button
-            className="md:hidden relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-white/[0.04] transition-colors"
+            className="md:hidden relative h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
@@ -211,7 +211,7 @@ export function Navbar({ user }: { user: User | null }) {
                     delay: 0.05 + i * 0.04,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="flex items-center justify-between px-5 py-5 rounded-2xl border border-white/[0.04] hover:border-white/10 hover:bg-white/[0.02] transition-colors"
+                  className="flex items-center justify-between px-5 py-5 rounded-2xl border border-border hover:border-primary/30 hover:bg-muted transition-colors"
                 >
                   <span className="text-2xl font-semibold tracking-tight text-foreground">
                     {link.label}
