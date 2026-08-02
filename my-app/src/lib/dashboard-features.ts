@@ -26,11 +26,11 @@ interface TabConfig {
 }
 
 export const TAB_CONFIG: TabConfig[] = [
-  { id: "overview",   label: "Overview",   feature: "always" },
-  { id: "services",   label: "Services",   feature: "pricing" },
-  { id: "leads",      label: "Leads",      feature: "contactForm" },
-  { id: "bookings",   label: "Bookings",   feature: "contactForm" },
-  { id: "blog",       label: "Blog",       feature: "blog" },
+  { id: "overview",   label: "Home",          feature: "always" },
+  { id: "services",   label: "Create Report", feature: "pricing" },
+  { id: "leads",      label: "Track Report",  feature: "contactForm" },
+  { id: "bookings",   label: "Community",     feature: "contactForm" },
+  { id: "blog",       label: "Admin",         feature: "blog" },
   { id: "analytics",  label: "Analytics",  feature: "analytics" },
   { id: "settings",   label: "Settings",   feature: "always" },
 ];

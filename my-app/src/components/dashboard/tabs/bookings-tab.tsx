@@ -54,9 +54,9 @@ export function BookingsTab() {
     <div className="space-y-6">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground tracking-tight">Bookings</h2>
+          <h2 className="text-2xl font-semibold text-foreground tracking-tight">Community</h2>
           <p className="mt-1 text-[14px] text-muted-foreground">
-            Appointment requests. Update status and payment as work progresses.
+            Browse visible classroom concerns and support the ones that need attention.
           </p>
         </div>
         <div className="flex gap-1 bg-muted rounded-lg p-1 flex-wrap">
@@ -79,7 +79,7 @@ export function BookingsTab() {
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
         ) : (bookings ?? []).length === 0 ? (
           <div className="p-12 text-center text-[13px] text-muted-foreground">
-            No bookings yet. Booking form coming soon — for now, you can add them directly from the website.
+            No community reports yet.
           </div>
         ) : (
           <div className="divide-y divide-border">

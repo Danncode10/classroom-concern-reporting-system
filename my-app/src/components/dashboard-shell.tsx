@@ -3,10 +3,10 @@
 import * as React from "react";
 import {
   LayoutDashboard,
-  Tag,
-  Inbox,
-  Calendar,
-  BookOpen,
+  SquarePen,
+  ClipboardList,
+  MessageSquareText,
+  ShieldCheck,
   BarChart3,
   Settings,
   LogOut,
@@ -36,10 +36,10 @@ import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 
 const ICONS: Record<DashboardTabId, LucideIcon> = {
   overview: LayoutDashboard,
-  services: Tag,
-  leads: Inbox,
-  bookings: Calendar,
-  blog: BookOpen,
+  services: SquarePen,
+  leads: ClipboardList,
+  bookings: MessageSquareText,
+  blog: ShieldCheck,
   analytics: BarChart3,
   settings: Settings,
 };
@@ -52,7 +52,11 @@ interface DashboardShellProps {
 export function DashboardShell({ user, profile }: DashboardShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const enabledTabs = React.useMemo(() => getEnabledTabs(), []);
+  const isAdmin = profile?.role === "admin";
+  const enabledTabs = React.useMemo(
+    () => getEnabledTabs().filter((tab) => tab.id !== "blog" || isAdmin),
+    [isAdmin],
+  );
   const validIds = React.useMemo(() => new Set(enabledTabs.map((t) => t.id)), [enabledTabs]);
 
   const initialTab = (() => {
