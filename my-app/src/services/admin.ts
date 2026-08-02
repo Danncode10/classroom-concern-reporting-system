@@ -48,7 +48,8 @@ export async function listAdminConcernReports(status: ConcernStatus | "all" = "a
   let query = supabase
     .from("concern_reports")
     .select("*")
-    .order("created_at", { ascending: true });
+    .order("vote_score", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (status !== "all") query = query.eq("status", status);
 
@@ -67,7 +68,15 @@ export async function listAdminConcernReports(status: ConcernStatus | "all" = "a
 
   const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
 
-  return (reports ?? []).map((report): AdminConcernReport => {
+  const sortedReports = status === "all"
+    ? [...(reports ?? [])].sort((a, b) => {
+      if (a.status === "resolved" && b.status !== "resolved") return 1;
+      if (a.status !== "resolved" && b.status === "resolved") return -1;
+      return 0;
+    })
+    : reports ?? [];
+
+  return sortedReports.map((report): AdminConcernReport => {
     const author = profileById.get(report.author_id);
     return {
       ...report,

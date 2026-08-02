@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, FileText, Inbox, MessageSquareText, TrendingUp } from "lucide-react";
+import { FileText, Inbox, MessageSquareText, TrendingUp } from "lucide-react";
 import { getDashboardStats, getRecentActivity } from "@/services/dashboard-stats";
 import type { DashboardTabId } from "@/lib/dashboard-features";
 import { isFeatureEnabled, type FeatureFlag } from "@/lib/dashboard-features";
@@ -58,7 +58,6 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
   });
 
   const quickActions: Array<{ label: string; desc: string; tab: DashboardTabId; flag: FeatureFlag }> = [
-    { label: "Create report",     desc: "Submit a classroom concern", tab: "create-report" as const, flag: "pricing" as const },
     { label: "Track report",      desc: "Check your submitted reports", tab: "track-report" as const, flag: "contactForm" as const },
     { label: "Home feed",         desc: "See visible student concerns", tab: "home" as const, flag: "always" as const },
     { label: "Account settings",  desc: "Profile and security",        tab: "settings" as const, flag: "always" as const },
@@ -66,7 +65,7 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-xl border border-border bg-card px-5 py-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">NVSU concerns</p>
           <h2 className="mt-1 text-2xl font-semibold text-foreground tracking-tight">
@@ -74,9 +73,6 @@ export function OverviewTab({ displayName, setTab }: OverviewTabProps) {
           </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">{today}</p>
         </div>
-        <button onClick={() => setTab("create-report")} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90">
-          Create report <ArrowRight className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

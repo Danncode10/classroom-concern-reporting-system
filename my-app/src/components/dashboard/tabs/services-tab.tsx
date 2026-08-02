@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ImagePlus, Loader2, Send, CheckCircle2, X } from "lucide-react";
+import { Camera, ImagePlus, Loader2, RotateCcw, Send, CheckCircle2, X } from "lucide-react";
 import {
   createConcernReport,
 } from "@/services/concerns";
@@ -65,6 +65,11 @@ export function ServicesTab() {
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
+  const openImagePicker = () => {
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    imageInputRef.current?.click();
+  };
+
   const selectImage = (file: File | undefined) => {
     if (!file) return;
     const validationError = validateConcernImage(file);
@@ -121,16 +126,37 @@ export function ServicesTab() {
                 )}
               </div>
               {imagePreview ? (
-                // eslint-disable-next-line @next/next/no-img-element -- Browser previews use an in-memory object URL.
-                <img src={imagePreview} alt="Selected concern" className="max-h-64 w-full rounded-xl border border-border object-cover" />
+                <div className="space-y-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Browser previews use an in-memory object URL. */}
+                  <img src={imagePreview} alt="Selected concern" className="max-h-64 w-full rounded-xl border border-border object-cover" />
+                  <button
+                    type="button"
+                    onClick={openImagePicker}
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 text-[12px] font-semibold text-foreground hover:bg-muted sm:w-auto"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Retake photo
+                  </button>
+                </div>
               ) : (
-                <label htmlFor="concern-image" className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center hover:bg-muted/40">
+                <button type="button" onClick={openImagePicker} className="flex min-h-28 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 text-center hover:bg-muted/40">
                   <ImagePlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-                  <span className="text-[12px] font-medium text-foreground">Add a photo</span>
-                  <span className="text-[11px] text-muted-foreground">JPEG, PNG, or WebP. Images are compressed before upload.</span>
-                </label>
+                  <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-foreground">
+                    <Camera className="h-4 w-4" />
+                    Take or add a photo
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">On mobile, your camera can open directly. JPEG, PNG, or WebP.</span>
+                </button>
               )}
-              <input ref={imageInputRef} id="concern-image" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => selectImage(event.target.files?.[0])} />
+              <input
+                ref={imageInputRef}
+                id="concern-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="sr-only"
+                onChange={(event) => selectImage(event.target.files?.[0])}
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
