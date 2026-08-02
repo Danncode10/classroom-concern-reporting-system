@@ -35,16 +35,18 @@ Note: Supabase Auth still requires an email or phone internally. For the MVP, cr
 
 - [x] Reuse the existing dashboard shell and sidebar.
 - [x] Rename the tabs for the classroom concern system.
-- [x] Suggested tabs: Home, Create Report, Track Report, Community, Admin.
+- [x] Suggested tabs: Home, Create Report, Track Report, Admin, Analytics.
 - [x] Show the Admin tab only for admin users.
+
+Note: The separate Community tab was removed because Home now acts as the social-style concern feed.
 
 ### User Features
 
-- Users can create a classroom concern report.
-- Users can track their own reports.
-- Users can view community reports.
-- Users can upvote or downvote community reports so visible concerns are easier to notice.
-- Students and professors use the same normal user role.
+- [x] Users can create a classroom concern report.
+- [x] Users can track their own reports.
+- [x] Users can view visible concern reports in the Home feed.
+- [x] Users can upvote or downvote concern reports so visible concerns are easier to notice.
+- [x] Students and professors use the same normal user role.
 
 ### Admin Features
 
