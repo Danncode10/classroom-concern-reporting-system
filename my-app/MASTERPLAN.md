@@ -33,10 +33,10 @@ Note: Supabase Auth still requires an email or phone internally. For the MVP, cr
 
 ### Dashboard Sidebar
 
-- Reuse the existing dashboard shell and sidebar.
-- Rename the tabs for the classroom concern system.
-- Suggested tabs: Home, Create Report, Track Report, Community, Admin.
-- Show the Admin tab only for admin users.
+- [x] Reuse the existing dashboard shell and sidebar.
+- [x] Rename the tabs for the classroom concern system.
+- [x] Suggested tabs: Home, Create Report, Track Report, Community, Admin.
+- [x] Show the Admin tab only for admin users.
 
 ### User Features
 
