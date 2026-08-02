@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardList, Loader2, MapPin } from "lucide-react";
-import { listMyConcernReports, type ConcernReport, type ConcernStatus } from "@/services/concerns";
+import { listMyConcernReports } from "@/services/concerns";
+import { CONCERN_STATUS_LABELS, type ConcernReport, type ConcernStatus } from "@/lib/concerns";
 
 const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
   { value: "all", label: "All" },
@@ -23,7 +24,7 @@ const STATUS_STYLES: Record<ConcernStatus, string> = {
 };
 
 function formatStatus(status: ConcernStatus) {
-  return status.replace(/_/g, " ");
+  return CONCERN_STATUS_LABELS[status];
 }
 
 function ReportCard({ report }: { report: ConcernReport }) {

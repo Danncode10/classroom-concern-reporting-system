@@ -895,7 +895,7 @@ export function BlogEditorPage({ post, orgId }: BlogEditorPageProps) {
         {/* Left */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/dashboard?tab=blog")}
+            onClick={() => router.push("/dashboard?tab=admin")}
             className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />

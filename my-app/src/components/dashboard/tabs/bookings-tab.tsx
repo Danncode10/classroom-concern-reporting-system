@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Loader2, MapPin, MessageSquareText } from "lucide-react";
+import { Loader2, MapPin, MessageSquareText, ThumbsDown, ThumbsUp } from "lucide-react";
 import {
   listCommunityConcerns,
   setConcernVote,
-  type CommunityConcern,
-  type ConcernStatus,
 } from "@/services/concerns";
+import { CONCERN_STATUS_LABELS, type CommunityConcern, type ConcernStatus } from "@/lib/concerns";
 
 const STATUS_FILTERS: Array<{ value: ConcernStatus | "all"; label: string }> = [
   { value: "all", label: "All" },
@@ -28,7 +27,11 @@ const STATUS_STYLES: Record<ConcernStatus, string> = {
 };
 
 function formatStatus(status: ConcernStatus) {
-  return status.replace(/_/g, " ");
+  return CONCERN_STATUS_LABELS[status];
+}
+
+function initials(name: string) {
+  return name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 }
 
 function CommunityCard({
@@ -41,57 +44,63 @@ function CommunityCard({
   isVoting: boolean;
 }) {
   return (
-    <article className="px-5 py-4">
-      <div className="flex gap-4">
-        <div className="flex w-12 shrink-0 flex-col items-center gap-1">
-          <button
-            onClick={() => onVote(concern.id, 1)}
-            disabled={isVoting}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
-              concern.userVote === 1
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-primary"
-            }`}
-            title="Upvote"
-          >
-            <ArrowUp className="h-4 w-4" />
-          </button>
-          <p className="text-lg font-semibold text-foreground tabular-nums">{concern.vote_score}</p>
-          <button
-            onClick={() => onVote(concern.id, -1)}
-            disabled={isVoting}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
-              concern.userVote === -1
-                ? "border-destructive bg-destructive/10 text-destructive"
-                : "border-border text-muted-foreground hover:text-destructive"
-            }`}
-            title="Downvote"
-          >
-            <ArrowDown className="h-4 w-4" />
-          </button>
+    <article className="rounded-xl border border-border bg-card px-5 py-4 shadow-sm">
+      <header className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+          {initials(concern.authorName)}
         </div>
-
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold text-foreground">{concern.title}</h3>
-            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${STATUS_STYLES[concern.status]}`}>
-              {formatStatus(concern.status)}
-            </span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="text-[13px] font-semibold text-foreground">{concern.authorName}</p>
+            <span className="text-[11px] text-muted-foreground">reported a classroom concern</span>
           </div>
-          <p className="mt-2 text-[13px] text-muted-foreground whitespace-pre-wrap">{concern.description}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
-            <span>{concern.authorName}</span>
-            <span className="capitalize">{concern.category}</span>
-            {concern.location && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {concern.location}
-              </span>
-            )}
-            <span>{new Date(concern.created_at).toLocaleString()}</span>
-          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{new Date(concern.created_at).toLocaleString()}</p>
         </div>
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[concern.status]}`}>
+          {formatStatus(concern.status)}
+        </span>
+      </header>
+
+      <div className="mt-4">
+        <h3 className="text-[15px] font-semibold text-foreground">{concern.title}</h3>
+        <p className="mt-2 whitespace-pre-wrap text-[13px] leading-6 text-muted-foreground">{concern.description}</p>
       </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <span className="rounded-full bg-muted px-2.5 py-1 capitalize">{concern.category}</span>
+        {concern.location && (
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            {concern.location}
+          </span>
+        )}
+      </div>
+
+      <footer className="mt-4 flex items-center border-t border-border pt-3">
+        <button
+          onClick={() => onVote(concern.id, 1)}
+          disabled={isVoting}
+          className={`inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[12px] font-medium transition-colors ${
+            concern.userVote === 1 ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+          title="Upvote this concern"
+        >
+          <ThumbsUp className="h-4 w-4" />
+          Upvote
+        </button>
+        <span className="px-2 text-[12px] font-semibold tabular-nums text-foreground">{concern.vote_score}</span>
+        <button
+          onClick={() => onVote(concern.id, -1)}
+          disabled={isVoting}
+          className={`inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[12px] font-medium transition-colors ${
+            concern.userVote === -1 ? "bg-destructive/10 text-destructive" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+          title="Downvote this concern"
+        >
+          <ThumbsDown className="h-4 w-4" />
+          Downvote
+        </button>
+      </footer>
     </article>
   );
 }
@@ -138,18 +147,18 @@ export function BookingsTab() {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden">
+      <div className="mx-auto max-w-3xl space-y-3">
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-5 h-5 animate-spin inline" /></div>
         ) : (concerns ?? []).length === 0 ? (
-          <div className="px-5 py-16 text-center">
+          <div className="rounded-xl border border-border bg-card px-5 py-16 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <MessageSquareText className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
             </div>
             <p className="mt-4 text-[13px] text-muted-foreground">No community reports found for this filter.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
+          <div className="space-y-3">
             {(concerns ?? []).map((concern) => (
               <CommunityCard
                 key={concern.id}

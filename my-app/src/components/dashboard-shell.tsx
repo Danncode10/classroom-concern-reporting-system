@@ -35,11 +35,11 @@ import { SettingsTab } from "@/components/dashboard/tabs/settings-tab";
 import { NotificationsBell } from "@/components/dashboard/notifications-bell";
 
 const ICONS: Record<DashboardTabId, LucideIcon> = {
-  overview: LayoutDashboard,
-  services: SquarePen,
-  leads: ClipboardList,
-  bookings: MessageSquareText,
-  blog: ShieldCheck,
+  home: LayoutDashboard,
+  "create-report": SquarePen,
+  "track-report": ClipboardList,
+  community: MessageSquareText,
+  admin: ShieldCheck,
   analytics: BarChart3,
   settings: Settings,
 };
@@ -54,20 +54,33 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
   const searchParams = useSearchParams();
   const isAdmin = profile?.role === "admin";
   const enabledTabs = React.useMemo(
-    () => getEnabledTabs().filter((tab) => tab.id !== "blog" || isAdmin),
+    () => getEnabledTabs().filter((tab) => tab.id !== "admin" || isAdmin),
     [isAdmin],
   );
   const validIds = React.useMemo(() => new Set(enabledTabs.map((t) => t.id)), [enabledTabs]);
 
   const initialTab = (() => {
     const fromQuery = searchParams.get("tab") as DashboardTabId | null;
-    return fromQuery && validIds.has(fromQuery) ? fromQuery : "overview";
+    const legacyTabs: Record<string, DashboardTabId> = {
+      overview: "home", services: "create-report", leads: "track-report", bookings: "community", blog: "admin",
+    };
+    const resolvedTab = fromQuery ? (legacyTabs[fromQuery] ?? fromQuery) : "home";
+    return validIds.has(resolvedTab) ? resolvedTab : "home";
   })();
 
   const [activeTab, setActiveTabLocal] = React.useState<DashboardTabId>(initialTab);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const [userMenuOpen, setUserMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const legacyTabs: Record<string, DashboardTabId> = {
+      overview: "home", services: "create-report", leads: "track-report", bookings: "community", blog: "admin",
+    };
+    const currentTab = searchParams.get("tab");
+    const replacement = currentTab ? legacyTabs[currentTab] : undefined;
+    if (replacement) router.replace(`/dashboard?tab=${replacement}`, { scroll: false });
+  }, [router, searchParams]);
 
   const displayName = profile?.full_name || profile?.school_id || user.email?.split("@")[0] || "there";
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
@@ -87,7 +100,7 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
   };
 
   const mainTabs = enabledTabs.filter((t) => t.id !== "settings");
-  const activeLabel = enabledTabs.find((t) => t.id === activeTab)?.label ?? "Overview";
+  const activeLabel = enabledTabs.find((t) => t.id === activeTab)?.label ?? "Home";
 
   return (
     <div className="h-screen bg-background flex overflow-hidden">
@@ -234,11 +247,11 @@ export function DashboardShell({ user, profile }: DashboardShellProps) {
         </header>
 
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          {activeTab === "overview"  && <OverviewTab displayName={displayName} setTab={setTab} />}
-          {activeTab === "services"  && <ServicesTab />}
-          {activeTab === "leads"     && <LeadsTab />}
-          {activeTab === "bookings"  && <BookingsTab />}
-          {activeTab === "blog"      && <BlogTab />}
+          {activeTab === "home"          && <OverviewTab displayName={displayName} setTab={setTab} />}
+          {activeTab === "create-report" && <ServicesTab />}
+          {activeTab === "track-report"  && <LeadsTab />}
+          {activeTab === "community"     && <BookingsTab />}
+          {activeTab === "admin"         && <BlogTab />}
           {activeTab === "analytics" && <AnalyticsTab />}
           {activeTab === "settings"  && <SettingsTab />}
         </main>

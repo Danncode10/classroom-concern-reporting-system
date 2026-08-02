@@ -5,11 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
 import {
-  CONCERN_CATEGORIES,
   createConcernReport,
-  type ConcernCategory,
-  type ConcernReportInput,
 } from "@/services/concerns";
+import { CONCERN_CATEGORIES, type ConcernCategory, type ConcernReportInput } from "@/lib/concerns";
 
 const initialForm: ConcernReportInput = {
   title: "",
