@@ -1,36 +1,36 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GitBranch, Sparkles, Rocket } from "lucide-react";
+import { ClipboardPlus, ThumbsUp, ShieldCheck } from "lucide-react";
 import { Typewriter } from "./typewriter";
 
 const STEPS = [
   {
     step: "01",
-    icon: GitBranch,
-    title: "Clone & configure",
+    icon: ClipboardPlus,
+    title: "Post the concern",
     description:
-      "Fork the repo, drop your Supabase credentials into .env.local, and you're live in under two minutes.",
-    snippet: "git clone dannflow && npm i",
+      "Use your school ID to sign in, choose the classroom location, select the concern type, and add a short description.",
+    snippet: "Room 402 · Damaged fan",
     // Paint-only radial gradient (no filter:blur cost during scroll)
     glow: "radial-gradient(ellipse at 70% 50%, rgba(124,92,255,0.25), transparent 60%)",
   },
   {
     step: "02",
-    icon: Sparkles,
-    title: "Describe your vision",
+    icon: ThumbsUp,
+    title: "Raise visibility",
     description:
-      "Use feature prompts in src/prompts/features/. Your AI reads schema, types, and services automatically.",
-    snippet: "/new-feature lead-capture",
+      "Students and professors can view the community feed and vote on concerns that affect them too.",
+    snippet: "18 votes · Pending",
     glow: "radial-gradient(ellipse at 70% 50%, rgba(245,158,11,0.22), transparent 60%)",
   },
   {
     step: "03",
-    icon: Rocket,
-    title: "Ship & scale",
+    icon: ShieldCheck,
+    title: "Admin takes action",
     description:
-      "Deploy to Vercel with one click. Checkpoint system means you can always roll back safely.",
-    snippet: "vercel deploy --prod",
+      "Admins review reports, update status, remove invalid posts, and keep users accountable.",
+    snippet: "Status: In Progress",
     glow: "radial-gradient(ellipse at 70% 50%, rgba(16,185,129,0.22), transparent 60%)",
   },
 ];
@@ -60,7 +60,7 @@ export function HowItWorks() {
             How it works
           </span>
           <h2 className="mt-6 text-4xl sm:text-5xl font-semibold text-foreground tracking-[-0.02em]">
-            <Typewriter text="Three steps to your next project" speed={40} />
+            <Typewriter text="Three steps from report to action" speed={40} />
           </h2>
         </motion.div>
 
@@ -128,11 +128,11 @@ export function HowItWorks() {
                             />
                           </div>
                           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground">
-                            terminal
+                            report flow
                           </span>
                         </div>
                         <span className="text-[9px] font-mono text-muted-foreground/60">
-                          ~ / project
+                          nvsu / concerns
                         </span>
                       </div>
 

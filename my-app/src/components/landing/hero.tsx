@@ -2,13 +2,14 @@
 
 import { useRef, useState, useEffect, MouseEvent } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   ArrowUpRight,
   ArrowRight,
-  Terminal,
+  ClipboardList,
   Database,
   Shield,
-  Zap,
+  ThumbsUp,
 } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { Typewriter } from "./typewriter";
@@ -18,7 +19,7 @@ interface HeroProps {
   isAuthed: boolean;
 }
 
-const HERO_HEADLINE = "The AI-native starter for shipping faster.";
+const HERO_HEADLINE = "Report classroom concerns clearly.";
 const HERO_TYPING_SPEED = 70; // ~3s total for 42-char headline
 
 export function Hero({ isAuthed }: HeroProps) {
@@ -50,7 +51,6 @@ export function Hero({ isAuthed }: HeroProps) {
       document.body.classList.remove("intro-active");
       clearHeader();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -58,7 +58,6 @@ export function Hero({ isAuthed }: HeroProps) {
       document.body.classList.remove("intro-active");
       clearHeader();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typingDone]);
 
   return (
@@ -102,9 +101,9 @@ export function Hero({ isAuthed }: HeroProps) {
           className="group inline-flex items-center gap-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <span className="flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase tracking-[0.15em]">
-            New
+            NVSU
           </span>
-          <span>Multi-tenant RLS templates for client websites</span>
+          <span>A shared place for classroom reports and updates</span>
           <ArrowRight className="h-3 w-3 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-1" />
         </motion.a>
 
@@ -115,7 +114,7 @@ export function Hero({ isAuthed }: HeroProps) {
             speed={HERO_TYPING_SPEED}
             delay={200}
             onComplete={() => setTypingDone(true)}
-            highlight={{ start: 4, end: 21, delay: 350 }}
+            highlight={{ start: 7, end: 26, delay: 350 }}
           />
         </h1>
 
@@ -134,9 +133,8 @@ export function Hero({ isAuthed }: HeroProps) {
           }}
           className="mt-8 max-w-xl text-[17px] text-muted-foreground leading-relaxed"
         >
-          A production-grade Next.js + Supabase template with multi-tenant
-          RLS, type-safe services, and an AI-driven workflow that turns
-          natural language into shipped features.
+          Students and professors can post classroom issues, vote on concerns
+          that need attention, and track what admins are already handling.
         </motion.p>
 
         {/* CTAs — visible but blurred during typing, pops in after */}
@@ -155,21 +153,18 @@ export function Hero({ isAuthed }: HeroProps) {
           className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-7"
         >
           <MagneticCTA href={isAuthed ? "/dashboard" : "/login"}>
-            Get started free
+            {isAuthed ? "Open dashboard" : "Sign in with school ID"}
           </MagneticCTA>
 
-          <a
-            href={siteConfig.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/#features"
             className="group inline-flex items-center gap-2 text-[14px] font-medium text-foreground/90 hover:text-foreground transition-colors"
           >
-            <GitHubIcon className="h-3.5 w-3.5" />
             <span className="border-b border-white/[0.15] group-hover:border-white/[0.4] transition-colors pb-0.5">
-              View on GitHub
+              See what you can report
             </span>
             <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </a>
+          </Link>
         </motion.div>
 
         {/* Customer logo strip — blurred during typing, clears after */}
@@ -188,17 +183,17 @@ export function Hero({ isAuthed }: HeroProps) {
           className="mt-16 flex flex-col gap-5"
         >
           <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60">
-            Built for teams shipping production software
+            Built for everyday classroom concerns
           </p>
           {/* Grid (not flex) for universal gap support across browsers */}
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-x-8 gap-y-4 max-w-2xl">
             {[
-              "Vercel",
-              "Supabase",
-              "Tailwind",
-              "Shadcn",
-              "TanStack",
-              "Upstash",
+              "Broken chairs",
+              "Fans",
+              "Equipment",
+              "Electrical",
+              "Cleanliness",
+              "Leaks",
             ].map((logo) => (
               <span
                 key={logo}
@@ -238,7 +233,7 @@ export function Hero({ isAuthed }: HeroProps) {
                 <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white/[0.03] border border-white/[0.04]">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   <span className="text-[10px] font-mono text-muted-foreground">
-                    {siteConfig.name}.app/dashboard
+                    {siteConfig.name}/dashboard
                   </span>
                 </div>
                 <div className="w-12" />
@@ -247,7 +242,7 @@ export function Hero({ isAuthed }: HeroProps) {
               {/* Dashboard grid */}
               <div className="grid grid-cols-12 gap-3 p-5">
                 <div className="col-span-3 space-y-2">
-                  {[Terminal, Database, Shield, Zap].map((Icon, i) => (
+                  {[ClipboardList, ThumbsUp, Database, Shield].map((Icon, i) => (
                     <div
                       key={i}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[11px] transition-colors duration-200 ${
@@ -258,7 +253,7 @@ export function Hero({ isAuthed }: HeroProps) {
                     >
                       <Icon className="h-3 w-3" strokeWidth={1.5} />
                       <span className="font-medium">
-                        {["Overview", "Database", "Auth", "API"][i]}
+                        {["Feed", "Votes", "Reports", "Admin"][i]}
                       </span>
                     </div>
                   ))}
@@ -267,9 +262,9 @@ export function Hero({ isAuthed }: HeroProps) {
                 <div className="col-span-9 space-y-3">
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "MRR", val: "$48.2k", delta: "+12.4%" },
-                      { label: "Active orgs", val: "1,247", delta: "+8.2%" },
-                      { label: "Uptime", val: "99.99%", delta: "30d" },
+                      { label: "Open reports", val: "24", delta: "today" },
+                      { label: "In progress", val: "8", delta: "active" },
+                      { label: "Resolved", val: "31", delta: "month" },
                     ].map((s) => (
                       <div
                         key={s.label}
@@ -290,7 +285,7 @@ export function Hero({ isAuthed }: HeroProps) {
 
                   <div className="relative h-32 rounded-xl bg-white/[0.02] border border-white/[0.04] overflow-hidden p-3">
                     <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground mb-2">
-                      Revenue by tenant · last 12 weeks
+                      Reports by visibility · this week
                     </p>
                     <div className="flex items-end justify-between h-16 gap-1">
                       {[40, 60, 35, 75, 55, 85, 70, 90, 65, 80, 50, 95].map(
@@ -307,9 +302,9 @@ export function Hero({ isAuthed }: HeroProps) {
 
                   <div className="space-y-1.5">
                     {[
-                      { user: "stripe-checkout", action: "POST /api/webhooks · 200 OK" },
-                      { user: "auth.signIn", action: "INSERT auth.sessions · RLS pass" },
-                      { user: "pages.update", action: "UPDATE pages · org_id matched" },
+                      { user: "Room 402", action: "Damaged fan · In progress" },
+                      { user: "Lab 3", action: "Missing projector cable · Received" },
+                      { user: "Room 211", action: "Broken chairs · Pending" },
                     ].map((row, i) => (
                       <div
                         key={i}
@@ -317,7 +312,7 @@ export function Hero({ isAuthed }: HeroProps) {
                       >
                         <div className="flex items-center gap-2.5">
                           <span className="px-1.5 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            ok
+                            live
                           </span>
                           <div>
                             <p className="text-[10px] font-mono text-foreground">
@@ -329,7 +324,7 @@ export function Hero({ isAuthed }: HeroProps) {
                           </div>
                         </div>
                         <span className="text-[9px] font-mono text-muted-foreground">
-                          {12 + i}ms
+                          {18 - i * 4} votes
                         </span>
                       </div>
                     ))}
@@ -377,7 +372,7 @@ function MagneticCTA({ href, children }: { href: string; children: React.ReactNo
   };
 
   return (
-    <a
+    <Link
       ref={ref}
       href={href}
       onMouseMove={handleMove}
@@ -389,7 +384,7 @@ function MagneticCTA({ href, children }: { href: string; children: React.ReactNo
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-background/10 group-hover:bg-background/20 transition-colors duration-200">
         <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -440,13 +435,5 @@ function TiltCard({ children }: { children: React.ReactNode }) {
     >
       {children}
     </div>
-  );
-}
-
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-    </svg>
   );
 }

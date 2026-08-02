@@ -1,4 +1,19 @@
 import { siteConfig } from "@/lib/config";
+import Link from "next/link";
+
+const productLinks = [
+  { label: "Features", href: "/#features" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Login", href: "/login" },
+  { label: "Dashboard", href: "/dashboard" },
+];
+
+const workflowLinks = [
+  "Post reports",
+  "Track status",
+  "Community votes",
+  "Admin review",
+];
 
 export function Footer() {
   return (
@@ -38,14 +53,14 @@ export function Footer() {
               Product
             </h4>
             <ul className="space-y-2.5">
-              {["Features", "Pricing", "Changelog", "Docs"].map((item) => (
-                <li key={item}>
-                  <a
-                    href="#"
+              {productLinks.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-300"
                   >
-                    {item}
-                  </a>
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -57,14 +72,14 @@ export function Footer() {
               Company
             </h4>
             <ul className="space-y-2.5">
-              {["About", "Blog", "Careers", "Contact"].map((item) => (
+              {workflowLinks.map((item) => (
                 <li key={item}>
-                  <a
-                    href="#"
+                  <Link
+                    href="/#features"
                     className="text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-300"
                   >
                     {item}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -76,7 +91,7 @@ export function Footer() {
               Legal
             </h4>
             <ul className="space-y-2.5">
-              {["Privacy", "Terms", "License"].map((item) => (
+              {["Privacy", "Acceptable use", "Moderation"].map((item) => (
                 <li key={item}>
                   <a
                     href="#"
