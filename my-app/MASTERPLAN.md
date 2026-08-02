@@ -16,10 +16,10 @@ The app already has authentication, landing pages, dashboard layout, sidebar nav
 
 ### Landing Page
 
-- Replace the generic Dannflow landing page copy with NVSU classroom concern reporting content.
-- Keep the existing layout structure where possible.
-- Make the first screen clearly explain that users can post, track, and support classroom concerns.
-- Remove or hide non-MVP sections such as pricing, marketing blog previews, leads, bookings, and generic SaaS content.
+- [x] Replace the generic Dannflow landing page copy with NVSU classroom concern reporting content.
+- [x] Keep the existing layout structure where possible.
+- [x] Make the first screen clearly explain that users can post, track, and support classroom concerns.
+- [x] Remove or hide non-MVP sections such as pricing, marketing blog previews, leads, bookings, and generic SaaS content.
 
 ### Login Page
 
