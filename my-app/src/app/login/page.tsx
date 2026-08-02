@@ -44,6 +44,9 @@ export default function AuthPage() {
       }
 
       const result = await signInWithEmailRateLimited(schoolIdToAuthEmail(normalizedSchoolId), password);
+      if (!result.success) {
+        throw new Error(result.error || "Invalid school ID or password.");
+      }
       if (result.requiresMFA) {
         router.push('/auth/mfa');
       } else {
