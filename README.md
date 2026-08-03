@@ -6,15 +6,16 @@ The system gives students and professors a simple place to post classroom issues
 
 ## Features
 
-- Student and professor concern reporting
-- Community concern feed
-- Upvote and downvote support
-- Report status tracking
-- Photo upload support for evidence
-- User dashboard for submitted and supported concerns
-- Admin dashboard for moderation and status updates
-- User blocking and post removal tools
-- Supabase authentication, database, storage, and row-level security
+- School-ID and password login for manually created accounts
+- Home concern feed, newest first, with status filters and infinite scrolling
+- Separate upvote and downvote totals with immediate feedback
+- Optional photo evidence, including mobile camera capture and retake
+- Character limits that keep reports readable in the feed
+- Personal report tracking by status
+- Real-time feed refresh when reports or votes change
+- Admin-only report review, status updates, removal, and restoration
+- Admin-only user search, blocking, and unblocking
+- Analytics overview, Supabase database, storage, and row-level security
 
 ## Main User Roles
 
@@ -22,6 +23,8 @@ The system gives students and professors a simple place to post classroom issues
 | --- | --- |
 | User | Students and professors who can post, view, and vote on concerns. |
 | Admin | School personnel who can manage reports, update statuses, remove invalid posts, and moderate users. |
+
+See [my-app/docs/mvp-capabilities.md](my-app/docs/mvp-capabilities.md) for the complete current MVP functionality and account-setup instructions.
 
 ## Tech Stack
 
@@ -79,7 +82,6 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PROJECT_ID=
-DATABASE_URL=
 NEXT_PUBLIC_SITE_NAME=NVSU Concerns
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
@@ -146,4 +148,3 @@ npm run db:types:remote
 This project is being built using a User Centered Design approach. The first version focuses on a clear student/professor reporting flow and a practical admin workflow for managing classroom concerns.
 
 See `PLAN.md` for the full product plan, screen requirements, user flows, and build phases.
-
